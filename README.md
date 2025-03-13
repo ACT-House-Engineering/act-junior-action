@@ -1,6 +1,6 @@
 # 🧒 ACT Junior Action
 
-ACT Junior is a GitHub Action that uses AI to automatically handle issues and pull requests. It leverages Claude AI to analyze and respond to tasks, create content, and generate solutions.
+ACT Junior is a [GitHub Action](https://github.com/marketplace/actions/act-junior) that uses AI to automatically handle issues and pull requests. It leverages [Claude AI](https://claude.ai) to analyze and respond to tasks, create content, and generate solutions.
 
 ## Features
 
@@ -62,7 +62,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is open source and available under the MIT License.
+This project is open source and available under the [MIT License](LICENSE).
 
 ## Support
 
