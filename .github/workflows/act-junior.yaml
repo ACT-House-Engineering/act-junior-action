@@ -160,6 +160,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Debug Trigger Info
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Event action: ${{ github.event.action }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "Has issue context: ${{ github.event.issue != null }}"
+          echo "Has PR context: ${{ github.event.pull_request != null }}"
+          echo "Has comment context: ${{ github.event.comment != null }}"
+          echo "Trigger keyword: ${{ env.ACT_TRIGGER_KEYWORD }}"
+          
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -225,8 +236,15 @@ jobs:
           # Create temp directory for all temporary files
           mkdir -p ./.temp
           
+          # DEBUG: Log event type and available context
+          echo "DEBUG: Event name is ${{ github.event_name }}"
+          echo "DEBUG: Event action is ${{ github.event.action }}"
+          echo "DEBUG: Has issue? $(if [ -n "${{ github.event.issue.number }}" ]; then echo "YES"; else echo "NO"; fi)"
+          echo "DEBUG: Has pull_request? $(if [ -n "${{ github.event.pull_request.number }}" ]; then echo "YES"; else echo "NO"; fi)"
+          
           # If triggered by a comment, get the issue number from the comment
           if [ "${{ github.event_name }}" == "issue_comment" ]; then
+            echo "DEBUG: Processing as issue_comment"
             ISSUE_NUMBER="${{ github.event.issue.number }}"
             
             # Store issue details directly to files to avoid shell parsing issues with quotes
@@ -256,7 +274,25 @@ jobs:
             
             # Add a comment acknowledging the retry request
             gh issue comment "$ISSUE_NUMBER" --body "I'll try to solve this issue again based on your feedback."
+          elif [ "${{ github.event_name }}" == "pull_request" ] || [ "${{ github.event_name }}" == "pull_request_review_comment" ]; then
+            echo "DEBUG: Processing as pull_request"
+            # For pull requests, use the pull_request properties
+            ISSUE_NUMBER="${{ github.event.pull_request.number }}"
+            echo "DEBUG: Pull request number: $ISSUE_NUMBER"
+            
+            # Store pull request details to files
+            echo "${{ github.event.pull_request.number }}" > ./.temp/issue_number.txt
+            echo "${{ github.event.pull_request.title }}" > ./.temp/issue_title.txt
+            echo "${{ github.event.pull_request.body }}" > ./.temp/issue_body.txt
+            
+            # Read values from files
+            ISSUE_NUMBER=$(cat ./.temp/issue_number.txt)
+            ISSUE_TITLE=$(cat ./.temp/issue_title.txt)
+            ISSUE_BODY=$(cat ./.temp/issue_body.txt)
+            
+            echo "DEBUG: After reading from files - ISSUE_NUMBER: $ISSUE_NUMBER"
           else
+            echo "DEBUG: Processing as regular issue"
             # Store issue details directly to files to avoid shell parsing issues with quotes
             echo "${{ github.event.issue.number }}" > ./.temp/issue_number.txt
             echo "${{ github.event.issue.title }}" > ./.temp/issue_title.txt
@@ -267,6 +303,11 @@ jobs:
             ISSUE_TITLE=$(cat ./.temp/issue_title.txt)
             ISSUE_BODY=$(cat ./.temp/issue_body.txt)
           fi
+          
+          # DEBUG: Final values
+          echo "DEBUG: Final ISSUE_NUMBER: $ISSUE_NUMBER"
+          echo "DEBUG: Final ISSUE_TITLE: $ISSUE_TITLE"
+          echo "DEBUG: ISSUE_BODY length: ${#ISSUE_BODY}"
           
           # Make sure we have a valid issue number
           if [ -z "$ISSUE_NUMBER" ]; then
