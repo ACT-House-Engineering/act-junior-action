@@ -59,7 +59,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: 'package.json'
+          node-version: lts/*
           # No cache specified here to avoid lock file errors
 
       - name: Setup PNPM
