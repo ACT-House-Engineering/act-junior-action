@@ -11,6 +11,7 @@
 # 
 # Add new secrets
 # https://github.com/ACT-House-Engineering/act-junior-action/settings/secrets/actions/new
+# Bleep boop. AI updated: 2023-12-05
 name: 🧒 ACT Junior
 
 on:
@@ -22,6 +23,9 @@ on:
     types: [created]
   pull_request_review_comment:
     types: [created]
+  push:
+    paths:
+      - '.github/workflows/act-junior.yaml'
 
 # Required permissions for creating PRs from workflows
 permissions:
@@ -41,6 +45,39 @@ env:
 # Note: This workflow requires a Personal Access Token with 'repo' scope
 # stored in the repository secrets as PAT_GITHUB to create pull requests
 jobs:
+  update-timestamp:
+    # Only run for push events to this workflow file
+    # and avoid running when the commit is already updating the timestamp
+    if: github.event_name == 'push' && !contains(github.event.head_commit.message, 'Update AI timestamp')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_GITHUB }}
+          
+      - name: Update timestamp in workflow file
+        run: |
+          # Configure git
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          
+          # Get current date
+          CURRENT_DATE=$(date +"%Y-%m-%d")
+          
+          # Update the timestamp comment in the workflow file
+          sed -i "s/# Bleep boop. AI updated: .*$/# Bleep boop. AI updated: $CURRENT_DATE/" .github/workflows/act-junior.yaml
+          
+          # Check if there are changes
+          if [[ -n $(git status --porcelain) ]]; then
+            # Commit and push the changes
+            git add .github/workflows/act-junior.yaml
+            git commit -m "Update AI timestamp to $CURRENT_DATE"
+            git push
+          else
+            echo "No changes to commit"
+          fi
+
   solve-issue:
     # Run this job when:
     # - @act-junior appears in issue/PR title, OR
