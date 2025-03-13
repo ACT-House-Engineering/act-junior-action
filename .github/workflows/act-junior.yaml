@@ -80,22 +80,23 @@ jobs:
           sed "s/\$CURRENT_DATE/$CURRENT_DATE/g" tasks/self-update-confirmation.md > ./.temp/processed_prompt.md
           
           # LEARNING: AI tools need non-interactive mode in CI. Use flags like --yes and --quiet to bypass prompts.
-          # Run Aider to update the timestamp with non-interactive flags
-          # --yes: Auto-confirm all prompts
-          # --yes-always: Auto-confirm all prompts and continue
-          # --no-pretty: Reduce colorized output
-          # --no-stream: Disable streaming responses
-          # --no-gitignore: Skip gitignore check
+          # Create .env file with Aider configuration
+          cat << EOF > .env
+          # Aider configuration - Created $(date)
+          ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
+          AIDER_MODEL=$AIDER_MODEL
+          # Output settings
+          AIDER_PRETTY=false
+          AIDER_STREAM=false
+          # Git settings
+          AIDER_GITIGNORE=false
+          # Non-interactive mode
+          AIDER_YES=true
+          EOF
+          
+          # Run Aider using .env file for configuration
           set +e  # Don't exit on error
-          aider --anthropic-api-key "$ANTHROPIC_API_KEY" \
-                --model "$AIDER_MODEL" \
-                --message-file ./.temp/processed_prompt.md \
-                --yes \
-                --yes-always \
-                --no-pretty \
-                --no-stream \
-                --no-gitignore \
-                .github/workflows/act-junior.yaml
+          aider --yes-always --message-file ./.temp/processed_prompt.md .github/workflows/act-junior.yaml
           AIDER_EXIT=$?
           set -e  # Restore exit on error
           
@@ -116,6 +117,7 @@ jobs:
           
           # Clean up temp files
           rm -rf ./.temp
+          rm -f .env  # Remove the .env file with secrets
 
   solve-issue:
     # Run this job when:
@@ -319,21 +321,38 @@ jobs:
           5. Do not commit temporary files or debugging artifacts
           EOF
           
+          # Create .env file with Aider configuration
+          cat << EOF > .env
+          # Aider configuration - Created $(date)
+          ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
+          AIDER_MODEL=$AIDER_MODEL
+          # Output settings
+          AIDER_PRETTY=false
+          AIDER_STREAM=false
+          # Git settings
+          AIDER_GITIGNORE=false
+          # Non-interactive mode
+          AIDER_YES=true
+          EOF
+          
           # Run aider to solve the issue
           if [ -n "$TARGET_FILES" ]; then
             # If we have specific target files, provide them to aider
-            aider --anthropic-api-key "$ANTHROPIC_API_KEY" --model "$AIDER_MODEL" --message-file ./.temp/issue_prompt.md $TARGET_FILES
+            aider --yes-always --message-file ./.temp/issue_prompt.md $TARGET_FILES
           else
             # Otherwise, let aider find relevant files
-            aider --anthropic-api-key "$ANTHROPIC_API_KEY" --model "$AIDER_MODEL" --message-file ./.temp/issue_prompt.md
+            aider --yes-always --message-file ./.temp/issue_prompt.md
           fi
           
           # Check if any changes were made (excluding temp files)
           git status --porcelain | grep -v "^??" | grep -v "./.temp/" || {
             echo "No changes made by aider, attempting to focus on README.md"
             # Try one more time with explicit focus on README if no changes
-            aider --anthropic-api-key "$ANTHROPIC_API_KEY" --model "$AIDER_MODEL" --message-file ./.temp/issue_prompt.md README.md
+            aider --yes-always --message-file ./.temp/issue_prompt.md README.md
           }
+          
+          # Clean up the .env file to avoid leaking secrets
+          rm -f .env
           
           # Get list of modified files (excluding temp files)
           MODIFIED_FILES=$(git status --porcelain | grep -v "^??" | grep -v "./.temp/" | awk '{print $2}')
