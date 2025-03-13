@@ -115,13 +115,9 @@ jobs:
           # Check if Aider created the poem file
           if [ -f "poem.md" ]; then
             echo "Aider successfully created the poem file"
-            # Add date to the poem filename to keep history
-            POEM_FILENAME="poems/poem-$CURRENT_DATE.md"
-            mkdir -p poems
-            cp poem.md "$POEM_FILENAME"
             
             # Commit and push the changes
-            git add poem.md "$POEM_FILENAME"
+            git add poem.md
             git commit -m "${{ env.ACT_VERIFY_COMMIT_MSG }} ($CURRENT_DATE $CURRENT_TIME)"
             git push
           else
