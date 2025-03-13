@@ -56,7 +56,13 @@ jobs:
         with:
           token: ${{ secrets.PAT_GITHUB }}
           
-      - name: Update timestamp in workflow file
+      - name: Install Aider
+        run: pip install aider-chat
+        
+      - name: Update timestamp using Aider
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AIDER_MODEL: ${{ env.AIDER_MODEL }}
         run: |
           # Configure git
           git config --global user.name "GitHub Actions Bot"
@@ -65,8 +71,24 @@ jobs:
           # Get current date
           CURRENT_DATE=$(date +"%Y-%m-%d")
           
-          # Update the timestamp comment in the workflow file
-          sed -i "s/# Bleep boop. AI updated: 2025-03-13
+          # Create a prompt file for Aider to update the timestamp
+          mkdir -p ./.temp
+          cat << EOF > ./.temp/update_prompt.md
+          # Self-Update Task
+          
+          Please update the timestamp comment in the workflow file.
+          
+          Find the line that says "# Bleep boop. AI updated: [DATE]" and
+          update it to "# Bleep boop. AI updated: $CURRENT_DATE"
+          
+          Only update this timestamp line and nothing else in the file.
+          EOF
+          
+          # Run Aider to update the timestamp
+          aider --anthropic-api-key "$ANTHROPIC_API_KEY" \
+                --model "$AIDER_MODEL" \
+                --message-file ./.temp/update_prompt.md \
+                .github/workflows/act-junior.yaml
           
           # Check if there are changes
           if [[ -n $(git status --porcelain) ]]; then
@@ -77,6 +99,9 @@ jobs:
           else
             echo "No changes to commit"
           fi
+          
+          # Clean up temp files
+          rm -rf ./.temp
 
   solve-issue:
     # Run this job when:
