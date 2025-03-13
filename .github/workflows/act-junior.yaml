@@ -265,7 +265,7 @@ jobs:
           if [ -z "$MODIFIED_FILES" ]; then
             echo "No changes were made by aider, creating a comment on the issue"
             gh issue comment "$ISSUE_NUMBER" --body "I attempted to solve this issue, but couldn't determine what changes to make. A human contributor may need to look at this."
-            gh issue add-label "$ISSUE_NUMBER" --label "needs-human-attention"
+            gh issue edit "$ISSUE_NUMBER" --add-label "needs-human-attention"
             exit 1
           fi
           
