@@ -24,8 +24,10 @@ ACT Junior is a GitHub Action that uses AI to automatically handle issues and pu
 ### Configuration
 
 1. Create the required secrets in your repository:
-   - `PAT_GITHUB`: Your GitHub Personal Access Token
+   - `PAT_GITHUB`: Your [GitHub Personal Access Token](https://github.com/settings/personal-access-tokens/new)
    - `ANTHROPIC_API_KEY`: Your Anthropic API Key
+
+   [Add these secrets](https://github.com/settings/secrets/actions/new) to your repository's Actions secrets.
 
 2. The action is configured via environment variables in the workflow:
    ```yaml
