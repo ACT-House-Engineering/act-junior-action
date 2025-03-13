@@ -78,8 +78,8 @@ jobs:
           
           Please update the timestamp comment in the workflow file.
           
-          Find the line that says "# Bleep boop. AI updated: [DATE]" and
-          update it to "# Bleep boop. AI updated: $CURRENT_DATE"
+          Find the line that says "# Bleep boop. AI updated: 2025-03-13
+          update it to "# Bleep boop. AI updated: 2025-03-13
           
           Only update this timestamp line and nothing else in the file.
           EOF
@@ -109,7 +109,7 @@ jobs:
           else
             # Manually update the timestamp if Aider didn't change it
             echo "Aider didn't make changes, updating timestamp manually"
-            sed -i "s/# Bleep boop. AI updated: .*$/# Bleep boop. AI updated: $CURRENT_DATE/" .github/workflows/act-junior.yaml
+            sed -i "s/# Bleep boop. AI updated: 2025-03-13
             
             # Check if our manual update made any changes
             if [[ -n $(git status --porcelain .github/workflows/act-junior.yaml) ]]; then
