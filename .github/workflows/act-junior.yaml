@@ -91,15 +91,19 @@ jobs:
           # LEARNING: AI tools need non-interactive mode in CI. Use flags like --yes and --quiet to bypass prompts.
           # Run Aider to update the timestamp with non-interactive flags
           # --yes: Auto-confirm all prompts
+          # --yes-always: Auto-confirm all prompts and continue
+          # --no-pretty: Reduce colorized output
+          # --no-stream: Disable streaming responses
           # --no-gitignore: Skip gitignore check
-          # --quiet: Reduce output verbosity
           set +e  # Don't exit on error
           aider --anthropic-api-key "$ANTHROPIC_API_KEY" \
                 --model "$AIDER_MODEL" \
                 --message-file ./.temp/update_prompt.md \
                 --yes \
+                --yes-always \
+                --no-pretty \
+                --no-stream \
                 --no-gitignore \
-                --quiet \
                 .github/workflows/act-junior.yaml
           AIDER_EXIT=$?
           set -e  # Restore exit on error
