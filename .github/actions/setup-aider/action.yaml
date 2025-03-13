@@ -1,0 +1,21 @@
+name: 'Setup Aider'
+description: 'Installs Aider AI pair programming tool'
+
+# Input parameters can be added here later if needed
+# inputs:
+#   version:
+#     description: 'Version of Aider to install'
+#     default: 'latest'
+#     required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Aider
+      shell: bash
+      run: |
+        # Install Aider AI pair programming tool
+        # This tool is used for AI-assisted code generation
+        echo "Installing Aider..."
+        pip install aider-chat
+        echo "Aider installation completed." 

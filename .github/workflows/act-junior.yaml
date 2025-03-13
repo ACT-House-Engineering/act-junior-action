@@ -70,7 +70,7 @@ jobs:
           token: ${{ secrets.PAT_GITHUB }}
           
       - name: Install Aider
-        run: pip install aider-chat
+        uses: ./.github/actions/setup-aider
         
       - name: Create poem using Aider
         env:
@@ -224,8 +224,7 @@ jobs:
           create_label_if_missing "${ACT_TRIGGER_KEYWORD}" "0E8A16" "Issue to be solved by AI Junior"
 
       - name: Install Aider
-        run: |
-          pip install aider-chat
+        uses: ./.github/actions/setup-aider
       
       - name: Determine issue details
         id: issue_info
