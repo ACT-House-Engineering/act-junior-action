@@ -1,4 +1,17 @@
-name: ACT Junior
+# Before you start: 
+# Setup PAT_GITHUB & ANTHROPIC_API_KEY Secrets
+# 
+# Permissions for PAT
+# - Read and Write access to organization private registries
+# - Read access to code and metadata
+# - Read and Write access to actions, deployments, issues, and pull requests
+# 
+# Create GitHub PAT (Can be Personal or Org)
+# https://github.com/settings/personal-access-tokens/new
+# 
+# Add new secrets
+# https://github.com/ACT-House-Engineering/act-junior-action/settings/secrets/actions/new
+name: 🧒 ACT Junior
 
 on:
   issues:
