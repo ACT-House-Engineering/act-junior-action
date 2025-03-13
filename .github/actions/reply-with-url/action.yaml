@@ -1,0 +1,51 @@
+name: 'Reply with Workflow URL'
+description: 'Posts a response to issue/PR with workflow URL'
+
+inputs:
+  issue-number:
+    description: 'Issue or PR number to comment on'
+    required: true
+  message-prefix:
+    description: 'Text to include before the workflow URL'
+    required: false
+    default: 'On it! I''m working on this request.'
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+  event-name:
+    description: 'Name of the triggering event'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Post comment with workflow URL
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        ISSUE_NUMBER: ${{ inputs.issue-number }}
+        EVENT_NAME: ${{ inputs.event-name }}
+        MESSAGE_PREFIX: ${{ inputs.message-prefix }}
+      run: |
+        # Construct the workflow run URL
+        WORKFLOW_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        
+        # Create temporary file for the message
+        TEMP_FILE=$(mktemp)
+        echo "${MESSAGE_PREFIX}" > $TEMP_FILE
+        echo "" >> $TEMP_FILE
+        echo "You can follow my progress here: ${WORKFLOW_URL}" >> $TEMP_FILE
+        
+        # Post comment based on event type
+        if [[ "${EVENT_NAME}" == "pull_request"* ]]; then
+          echo "Commenting on PR #${ISSUE_NUMBER}"
+          gh pr comment "${ISSUE_NUMBER}" --body-file $TEMP_FILE
+        else
+          echo "Commenting on issue #${ISSUE_NUMBER}"
+          gh issue comment "${ISSUE_NUMBER}" --body-file $TEMP_FILE
+        fi
+        
+        # Clean up
+        rm $TEMP_FILE
+        
+        echo "Posted response with workflow URL: ${WORKFLOW_URL}" 
