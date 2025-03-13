@@ -1,14 +1,14 @@
 # 🧒 [ACT Junior Action](https://github.com/marketplace/actions/act-junior)
 
-ACT Junior ([source](https://github.com/sderev/act-junior)) is a [GitHub Action](https://github.com/marketplace/actions/act-junior) that uses AI to automatically handle [issues](https://docs.github.com/en/issues) and [pull requests](https://docs.github.com/en/pull-requests). It leverages [Claude AI](https://claude.ai) to analyze and respond to tasks, create content, and generate solutions. View it on the [GitHub Marketplace](https://github.com/marketplace/actions/act-junior).
+ACT Junior ([source](https://github.com/sderev/act-junior)) is a [GitHub Action](https://github.com/marketplace/actions/act-junior) that uses AI to automatically handle [issues](https://docs.github.com/en/issues) and [pull requests](https://docs.github.com/en/pull-requests). It leverages [Claude AI](https://claude.ai) to analyze and respond to tasks, create content, and generate solutions. View it on the [GitHub Marketplace](https://github.com/marketplace/actions/act-junior) or check the [latest releases](https://github.com/sderev/act-junior/releases).
 
 ## Features
 
-- Automatically responds to issues and pull requests when mentioned with `@act-junior`
-- Creates AI-generated poems and content
-- Self-updates and maintains its own workflow
-- Creates pull requests with solutions
-- Handles code changes and repository updates
+- Automatically responds to [issues](https://docs.github.com/en/issues) and [pull requests](https://docs.github.com/en/pull-requests) when mentioned with `@act-junior`
+- Creates [AI-generated](https://claude.ai) poems and content
+- [Self-updates](https://docs.github.com/en/actions/using-workflows/about-workflows) and maintains its own workflow
+- Creates [pull requests](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) with solutions
+- Handles [code changes](https://docs.github.com/en/repositories/working-with-files/managing-files) and repository updates
 
 ## Setup
 
@@ -44,11 +44,11 @@ ACT Junior ([source](https://github.com/sderev/act-junior)) is a [GitHub Action]
 ## Workflow Events
 
 The action triggers on:
-- Issues: opened, edited, labeled
-- Pull Requests: opened, edited, labeled
-- Issue Comments: created
-- PR Review Comments: created
-- Push events to specific files
+- [Issues](https://docs.github.com/en/issues): opened, edited, labeled
+- [Pull Requests](https://docs.github.com/en/pull-requests): opened, edited, labeled
+- [Issue Comments](https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues#participating-in-issues): created
+- [PR Review Comments](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests/commenting-on-a-pull-request): created
+- [Push events](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#push) to specific files
 
 ## Security
 
