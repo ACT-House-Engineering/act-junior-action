@@ -73,47 +73,23 @@ jobs:
         uses: ./.github/actions/setup-aider
         
       - name: Create poem using Aider
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          AIDER_MODEL: ${{ env.AIDER_MODEL }}
-        run: |
-          # Configure git
-          git config --global user.name "🧒 ACT Junior"
-          git config --global user.email "beta@act.house"
+        id: create-poem
+        uses: ./.github/actions/run-aider
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          aider-model: ${{ env.AIDER_MODEL }}
+          git-config-name: "🧒 ACT Junior"
+          git-config-email: "beta@act.house"
+          prompt-file: ${{ env.ACT_TASK_FILE }}
           
+      - name: Check if poem was created
+        if: steps.create-poem.outputs.success == 'true'
+        run: |
           # Get current date and time
           CURRENT_DATE=$(date +"%Y-%m-%d")
           CURRENT_TIME=$(date +"%H:%M:%S")
           
-          # Replace date and time placeholders in the prompt file with current values
-          mkdir -p ./.temp
-          sed -e "s/\$CURRENT_DATE/$CURRENT_DATE/g" -e "s/\$CURRENT_TIME/$CURRENT_TIME/g" ${{ env.ACT_TASK_FILE }} > ./.temp/processed_prompt.md
-          
-          # LEARNING: AI tools need non-interactive mode in CI. Use flags like --yes and --quiet to bypass prompts.
-          # Create .env file with Aider configuration
-          cat << EOF > .env
-          # Aider configuration - Created $(date)
-          ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
-          AIDER_MODEL=$AIDER_MODEL
-          # Output settings
-          AIDER_PRETTY=false
-          AIDER_STREAM=false
-          # Git settings
-          AIDER_GITIGNORE=false
-          # Disable auto-commits
-          AIDER_AUTO_COMMITS=false
-          # Non-interactive mode
-          AIDER_YES=true
-          EOF
-          
-          # Run Aider using .env file for configuration
-          set +e  # Don't exit on error
-          aider --yes-always --message-file ./.temp/processed_prompt.md
-          AIDER_EXIT=$?
-          set -e  # Restore exit on error
-          
-          # LEARNING: AI tools require defensive coding. Use fallbacks, capture exit codes, and handle all outcome scenarios.
-          # Check if Aider created the poem file
+          # Commit and push if poem.md exists
           if [ -f "poem.md" ]; then
             echo "Aider successfully created the poem file"
             
@@ -122,15 +98,16 @@ jobs:
             git commit -m "${{ env.ACT_VERIFY_COMMIT_MSG }} ($CURRENT_DATE $CURRENT_TIME)"
             git push
           else
-            # If Aider didn't create the poem, fail the workflow
             echo "Aider didn't create the poem file"
             echo "Ensuring the workflow fails if the AI component fails"
             exit 1
           fi
-          
-          # Clean up temp files
-          rm -rf ./.temp
-          rm -f .env  # Remove the .env file with secrets
+      
+      - name: Cleanup
+        uses: ./.github/actions/cleanup-temp-files
+        with:
+          include-aider-files: 'true'
+          include-env-files: 'true'
 
   solve-issue:
     # Run this job when:
@@ -209,130 +186,31 @@ jobs:
       - name: Install Aider
         uses: ./.github/actions/setup-aider
       
-      - name: Determine issue details
+      - name: Extract issue details
         id: issue_info
-        env:
-          GH_TOKEN: ${{ secrets.PAT_GITHUB }}
-          ACT_TRIGGER_KEYWORD: ${{ env.ACT_TRIGGER_KEYWORD }}
-        run: |
-          # Create temp directory for all temporary files
-          mkdir -p ./.temp
-          
-          # DEBUG: Log event type and available context
-          echo "DEBUG: Event name is ${{ github.event_name }}"
-          echo "DEBUG: Event action is ${{ github.event.action }}"
-          echo "DEBUG: Has issue? $(if [ -n "${{ github.event.issue.number }}" ]; then echo "YES"; else echo "NO"; fi)"
-          echo "DEBUG: Has pull_request? $(if [ -n "${{ github.event.pull_request.number }}" ]; then echo "YES"; else echo "NO"; fi)"
-          
-          # If triggered by a comment, get the issue number from the comment
-          if [ "${{ github.event_name }}" == "issue_comment" ]; then
-            echo "DEBUG: Processing as issue_comment"
-            ISSUE_NUMBER="${{ github.event.issue.number }}"
-            
-            # Store issue details directly to files to avoid shell parsing issues with quotes
-            echo "${{ github.event.issue.number }}" > ./.temp/issue_number.txt
-            echo "${{ github.event.issue.title }}" > ./.temp/issue_title.txt
-            echo "${{ github.event.issue.body }}" > ./.temp/issue_body.txt
-            echo "${{ github.event.comment.body }}" > ./.temp/comment_body.txt
-            echo "${{ github.event.comment.user.login }}" > ./.temp/comment_author.txt
-            
-            # Read values from files
-            ISSUE_NUMBER=$(cat ./.temp/issue_number.txt)
-            ISSUE_TITLE=$(cat ./.temp/issue_title.txt)
-            ISSUE_BODY=$(cat ./.temp/issue_body.txt)
-            COMMENT_BODY=$(cat ./.temp/comment_body.txt)
-            COMMENT_AUTHOR=$(cat ./.temp/comment_author.txt)
-            
-            # Add the comment content to the issue body for additional context
-            {
-              echo "$ISSUE_BODY"
-              echo ""
-              echo "--- "
-              echo "Additional context from @$COMMENT_AUTHOR:"
-              echo "$COMMENT_BODY"
-            } > ./.temp/issue_body_with_comment.txt
-            
-            ISSUE_BODY=$(cat ./.temp/issue_body_with_comment.txt)
-            
-            # Add a comment acknowledging the retry request
-            gh issue comment "$ISSUE_NUMBER" --body "I'll try to solve this issue again based on your feedback."
-          elif [ "${{ github.event_name }}" == "pull_request" ] || [ "${{ github.event_name }}" == "pull_request_review_comment" ]; then
-            echo "DEBUG: Processing as pull_request"
-            # For pull requests, use the pull_request properties
-            ISSUE_NUMBER="${{ github.event.pull_request.number }}"
-            echo "DEBUG: Pull request number: $ISSUE_NUMBER"
-            
-            # Store pull request details to files
-            echo "${{ github.event.pull_request.number }}" > ./.temp/issue_number.txt
-            echo "${{ github.event.pull_request.title }}" > ./.temp/issue_title.txt
-            echo "${{ github.event.pull_request.body }}" > ./.temp/issue_body.txt
-            
-            # Read values from files
-            ISSUE_NUMBER=$(cat ./.temp/issue_number.txt)
-            ISSUE_TITLE=$(cat ./.temp/issue_title.txt)
-            ISSUE_BODY=$(cat ./.temp/issue_body.txt)
-            
-            echo "DEBUG: After reading from files - ISSUE_NUMBER: $ISSUE_NUMBER"
-          else
-            echo "DEBUG: Processing as regular issue"
-            # Store issue details directly to files to avoid shell parsing issues with quotes
-            echo "${{ github.event.issue.number }}" > ./.temp/issue_number.txt
-            echo "${{ github.event.issue.title }}" > ./.temp/issue_title.txt
-            echo "${{ github.event.issue.body }}" > ./.temp/issue_body.txt
-            
-            # Read values from files
-            ISSUE_NUMBER=$(cat ./.temp/issue_number.txt)
-            ISSUE_TITLE=$(cat ./.temp/issue_title.txt)
-            ISSUE_BODY=$(cat ./.temp/issue_body.txt)
-          fi
-          
-          # DEBUG: Final values
-          echo "DEBUG: Final ISSUE_NUMBER: $ISSUE_NUMBER"
-          echo "DEBUG: Final ISSUE_TITLE: $ISSUE_TITLE"
-          echo "DEBUG: ISSUE_BODY length: ${#ISSUE_BODY}"
-          
-          # Make sure we have a valid issue number
-          if [ -z "$ISSUE_NUMBER" ]; then
-            echo "Error: ISSUE_NUMBER is empty"
-            exit 1
-          fi
-          
-          # For debugging
-          echo "Processing issue #$ISSUE_NUMBER"
-          
-          # Output the issue details for later steps using the GitHub output
-          echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
-          echo "issue_title<<EOF" >> $GITHUB_OUTPUT
-          cat ./.temp/issue_title.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-          echo "issue_body<<EOF" >> $GITHUB_OUTPUT
-          if [ -f "./.temp/issue_body_with_comment.txt" ]; then
-            cat ./.temp/issue_body_with_comment.txt >> $GITHUB_OUTPUT
-          else
-            cat ./.temp/issue_body.txt >> $GITHUB_OUTPUT
-          fi
-          echo "EOF" >> $GITHUB_OUTPUT
+        uses: ./.github/actions/extract-issue-details
+        with:
+          github-token: ${{ secrets.PAT_GITHUB }}
+          event-name: ${{ github.event_name }}
+          event-action: ${{ github.event.action }}
+          trigger-keyword: ${{ env.ACT_TRIGGER_KEYWORD }}
 
       - name: Reply with workflow URL
         uses: ./.github/actions/reply-with-url
         with:
-          issue-number: ${{ steps.issue_info.outputs.issue_number }}
+          issue-number: ${{ steps.issue_info.outputs.issue-number }}
           github-token: ${{ secrets.PAT_GITHUB }}
           event-name: ${{ github.event_name }}
           message-prefix: "On it! I'm working on this request."
 
       - name: Analyze issue and create solution branch
         id: solution
-        env:
-          GH_TOKEN: ${{ secrets.PAT_GITHUB }}
-          AIDER_MODEL: ${{ env.AIDER_MODEL }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          echo "Using AI model: $AIDER_MODEL"
+          echo "Using AI model: ${{ env.AIDER_MODEL }}"
           # Get issue details from previous step
-          ISSUE_NUMBER="${{ steps.issue_info.outputs.issue_number }}"
-          ISSUE_TITLE="${{ steps.issue_info.outputs.issue_title }}"
-          ISSUE_BODY="${{ steps.issue_info.outputs.issue_body }}"
+          ISSUE_NUMBER="${{ steps.issue_info.outputs.issue-number }}"
+          ISSUE_TITLE="${{ steps.issue_info.outputs.issue-title }}"
+          ISSUE_BODY="${{ steps.issue_info.outputs.issue-body }}"
           TIMESTAMP=$(date +%s)
           
           # Extract relevant file(s) from issue title and body
@@ -371,131 +249,64 @@ jobs:
           5. Do not commit temporary files or debugging artifacts
           EOF
           
-          # Create .env file with Aider configuration
-          cat << EOF > .env
-          # Aider configuration - Created $(date)
-          ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
-          AIDER_MODEL=$AIDER_MODEL
-          # Output settings
-          AIDER_PRETTY=false
-          AIDER_STREAM=false
-          # Git settings
-          AIDER_GITIGNORE=false
-          # Disable auto-commits
-          AIDER_AUTO_COMMITS=false
-          # Non-interactive mode
-          AIDER_YES=true
-          EOF
+          # Output the branch name for later steps
+          echo "branch=fix/issue-$ISSUE_NUMBER-retry-$TIMESTAMP" >> $GITHUB_OUTPUT
+          echo "target_files=$TARGET_FILES" >> $GITHUB_OUTPUT
+
+      - name: Run Aider on issue
+        id: run-aider
+        uses: ./.github/actions/run-aider
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          aider-model: ${{ env.AIDER_MODEL }}
+          git-config-name: "🧒 ACT Junior"
+          git-config-email: "beta@act.house"
+          prompt-file: ./.temp/issue_prompt.md
+          target-files: ${{ steps.solution.outputs.target_files }}
+
+      - name: Check if Aider made changes
+        if: steps.run-aider.outputs.success == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.PAT_GITHUB }}
+          ISSUE_NUMBER: ${{ steps.issue_info.outputs.issue-number }}
+        run: |
+          echo "No changes were made by aider, creating a comment on the issue"
+          gh issue comment "$ISSUE_NUMBER" --body "I attempted to solve this issue, but couldn't determine what changes to make. A human contributor may need to look at this."
+          gh issue edit "$ISSUE_NUMBER" --add-label "needs-human-attention"
+          exit 1
+
+      - name: Commit and push changes
+        if: steps.run-aider.outputs.success == 'true'
+        run: |
+          ISSUE_NUMBER="${{ steps.issue_info.outputs.issue-number }}"
+          ISSUE_TITLE="${{ steps.issue_info.outputs.issue-title }}"
+          MODIFIED_FILES="${{ steps.run-aider.outputs.modified-files }}"
           
-          # Run aider to solve the issue
-          if [ -n "$TARGET_FILES" ]; then
-            # If we have specific target files, provide them to aider
-            aider --yes-always --message-file ./.temp/issue_prompt.md $TARGET_FILES
-          else
-            # Otherwise, let aider find relevant files
-            aider --yes-always --message-file ./.temp/issue_prompt.md
-          fi
-          
-          # Check if any changes were made (excluding temp files)
-          git status --porcelain | grep -v "^??" | grep -v "./.temp/" || {
-            echo "No changes made by aider, attempting to focus on README.md"
-            # Try one more time with explicit focus on README if no changes
-            aider --yes-always --message-file ./.temp/issue_prompt.md README.md
-          }
-          
-          # Clean up the .env file to avoid leaking secrets
-          rm -f .env
-          
-          # Get list of modified files (excluding temp files)
-          MODIFIED_FILES=$(git status --porcelain | grep -v "^??" | grep -v "./.temp/" | awk '{print $2}')
-          
-          if [ -z "$MODIFIED_FILES" ]; then
-            echo "No changes were made by aider, creating a comment on the issue"
-            gh issue comment "$ISSUE_NUMBER" --body "I attempted to solve this issue, but couldn't determine what changes to make. A human contributor may need to look at this."
-            gh issue edit "$ISSUE_NUMBER" --add-label "needs-human-attention"
-            exit 1
-          fi
-          
-          echo "Modified files: $MODIFIED_FILES"
-          
-          # Only stage the modified files for commit, not the temp files
+          # Stage the modified files for commit
           git add $MODIFIED_FILES
           
           # Commit the changes with a reference to the issue
-          git commit -m "Fix #$ISSUE_NUMBER: $ISSUE_TITLE" || {
-            echo "Nothing to commit, exiting"
-            exit 1
-          }
+          git commit -m "Fix #$ISSUE_NUMBER: $ISSUE_TITLE"
           
-          # For debugging: show what was committed
-          git show --name-status --oneline HEAD
-          
-          # Output the branch name for later steps
-          echo "branch=fix/issue-$ISSUE_NUMBER-retry-$TIMESTAMP" >> $GITHUB_OUTPUT
-
-      - name: Push branch
-        run: |
+          # Push the changes
           git push origin "${{ steps.solution.outputs.branch }}"
 
       - name: Create Pull Request
-        if: success()
+        if: steps.run-aider.outputs.success == 'true'
         id: create_pr
-        env:
-          GH_TOKEN: ${{ secrets.PAT_GITHUB }}
-        run: |
-          ISSUE_NUMBER="${{ steps.issue_info.outputs.issue_number }}"
-          BRANCH_NAME="${{ steps.solution.outputs.branch }}"
-          ISSUE_TITLE="${{ steps.issue_info.outputs.issue_title }}"
-          
-          # Configure git for the GitHub Actions bot
-          git config --global user.name "🧒 ACT Junior"
-          git config --global user.email "beta@act.house"
-          
-          # Ensure temp directory exists
-          mkdir -p ./.temp
-          
-          # Create a simple PR description file
-          echo "This PR addresses issue #$ISSUE_NUMBER." > ./.temp/pr_body.txt
-          echo "" >> ./.temp/pr_body.txt
-          echo "## Changes" >> ./.temp/pr_body.txt
-          echo "- Modified code to fix the issue as described" >> ./.temp/pr_body.txt
-          echo "- Implemented changes based on AI analysis" >> ./.temp/pr_body.txt
-          echo "" >> ./.temp/pr_body.txt
-          echo "## Validation" >> ./.temp/pr_body.txt
-          echo "- The changes have been automatically generated and tested" >> ./.temp/pr_body.txt
-          echo "- Please review and provide feedback" >> ./.temp/pr_body.txt
-          echo "" >> ./.temp/pr_body.txt
-          echo "Closes #$ISSUE_NUMBER" >> ./.temp/pr_body.txt
-          
-          # Create PR using the body from the file
-          PR_URL=$(gh pr create --base main --head "$BRANCH_NAME" \
-            --title "Fix #$ISSUE_NUMBER: $ISSUE_TITLE" \
-            --body-file ./.temp/pr_body.txt || echo "")
-          
-          if [ -z "$PR_URL" ]; then
-            echo "Failed to create PR"
-            exit 1
-          fi
-          
-          echo "PR created: $PR_URL"
-          
-          # Extract PR number from URL
-          PR_NUMBER=$(echo $PR_URL | grep -oE '[0-9]+$')
-          
-          # Output the PR number for later steps
-          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
-          
+        uses: ./.github/actions/create-pull-request
+        with:
+          github-token: ${{ secrets.PAT_GITHUB }}
+          issue-number: ${{ steps.issue_info.outputs.issue-number }}
+          issue-title: ${{ steps.issue_info.outputs.issue-title }}
+          branch-name: ${{ steps.solution.outputs.branch }}
+          base-branch: main
+          git-config-name: "🧒 ACT Junior"
+          git-config-email: "beta@act.house"
+
       - name: Cleanup temporary files
         if: always()
-        run: |
-          # Remove temp directory and files
-          rm -rf ./.temp
-          # List any remaining temp files at root
-          find . -maxdepth 1 -name "*_*.txt" -delete
-          find . -maxdepth 1 -name "*.md" -not -name "README.md" -delete
-          # Ensure .aider files are removed
-          rm -f ./.aider.chat.history.md
-          rm -f ./.aider.input.md
-          rm -f ./.aider.output.md
-          echo "Temporary files cleaned up" 
+        uses: ./.github/actions/cleanup-temp-files
+        with:
+          include-aider-files: 'true'
+          include-env-files: 'true' 

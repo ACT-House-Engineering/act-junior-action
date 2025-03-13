@@ -1,0 +1,125 @@
+name: 'Extract Issue Details'
+description: 'Extract and normalize issue details from various GitHub events'
+
+inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+  event-name:
+    description: 'The GitHub event name'
+    required: true
+  event-action:
+    description: 'The GitHub event action'
+    required: true
+  trigger-keyword:
+    description: 'The keyword that triggers actions'
+    required: true
+    default: '@act-junior'
+
+outputs:
+  issue-number:
+    description: 'The issue or PR number'
+    value: ${{ steps.extract.outputs.issue_number }}
+  issue-title:
+    description: 'The issue or PR title'
+    value: ${{ steps.extract.outputs.issue_title }}
+  issue-body:
+    description: 'The issue or PR body with optional comment context'
+    value: ${{ steps.extract.outputs.issue_body }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Extract issue details
+      id: extract
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        ACT_TRIGGER_KEYWORD: ${{ inputs.trigger-keyword }}
+        EVENT_NAME: ${{ inputs.event-name }}
+        EVENT_ACTION: ${{ inputs.event-action }}
+      run: |
+        # Create temp directory for all temporary files
+        mkdir -p ./.temp
+        
+        # DEBUG: Log event type and available context
+        echo "DEBUG: Event name is $EVENT_NAME"
+        echo "DEBUG: Event action is $EVENT_ACTION"
+        
+        # If triggered by a comment, get the issue number from the comment
+        if [ "$EVENT_NAME" == "issue_comment" ]; then
+          echo "DEBUG: Processing as issue_comment"
+          
+          # Extract data using GitHub CLI to avoid shell parsing issues
+          gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }} --jq '.number' > ./.temp/issue_number.txt
+          gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }} --jq '.title' > ./.temp/issue_title.txt
+          gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }} --jq '.body' > ./.temp/issue_body.txt
+          gh api repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }} --jq '.body' > ./.temp/comment_body.txt
+          gh api repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }} --jq '.user.login' > ./.temp/comment_author.txt
+          
+          # Read values from files
+          ISSUE_NUMBER=$(cat ./.temp/issue_number.txt)
+          ISSUE_TITLE=$(cat ./.temp/issue_title.txt)
+          ISSUE_BODY=$(cat ./.temp/issue_body.txt)
+          COMMENT_BODY=$(cat ./.temp/comment_body.txt)
+          COMMENT_AUTHOR=$(cat ./.temp/comment_author.txt)
+          
+          # Add the comment content to the issue body for additional context
+          {
+            echo "$ISSUE_BODY"
+            echo ""
+            echo "--- "
+            echo "Additional context from @$COMMENT_AUTHOR:"
+            echo "$COMMENT_BODY"
+          } > ./.temp/issue_body_with_comment.txt
+          
+          ISSUE_BODY=$(cat ./.temp/issue_body_with_comment.txt)
+          
+        elif [ "$EVENT_NAME" == "pull_request" ] || [ "$EVENT_NAME" == "pull_request_review_comment" ]; then
+          echo "DEBUG: Processing as pull_request"
+          
+          # Extract data using GitHub CLI
+          gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }} --jq '.number' > ./.temp/issue_number.txt
+          gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }} --jq '.title' > ./.temp/issue_title.txt
+          gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }} --jq '.body' > ./.temp/issue_body.txt
+          
+          # Read values from files
+          ISSUE_NUMBER=$(cat ./.temp/issue_number.txt)
+          ISSUE_TITLE=$(cat ./.temp/issue_title.txt)
+          ISSUE_BODY=$(cat ./.temp/issue_body.txt)
+          
+        else
+          echo "DEBUG: Processing as regular issue"
+          
+          # Extract data using GitHub CLI
+          gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }} --jq '.number' > ./.temp/issue_number.txt
+          gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }} --jq '.title' > ./.temp/issue_title.txt
+          gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }} --jq '.body' > ./.temp/issue_body.txt
+          
+          # Read values from files
+          ISSUE_NUMBER=$(cat ./.temp/issue_number.txt)
+          ISSUE_TITLE=$(cat ./.temp/issue_title.txt)
+          ISSUE_BODY=$(cat ./.temp/issue_body.txt)
+        fi
+        
+        # Make sure we have a valid issue number
+        if [ -z "$ISSUE_NUMBER" ]; then
+          echo "Error: ISSUE_NUMBER is empty"
+          exit 1
+        fi
+        
+        # For debugging
+        echo "Processing issue #$ISSUE_NUMBER"
+        
+        # Output the issue details for later steps
+        echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+        echo "issue_title<<EOF" >> $GITHUB_OUTPUT
+        cat ./.temp/issue_title.txt >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        echo "issue_body<<EOF" >> $GITHUB_OUTPUT
+        if [ -f "./.temp/issue_body_with_comment.txt" ]; then
+          cat ./.temp/issue_body_with_comment.txt >> $GITHUB_OUTPUT
+        else
+          cat ./.temp/issue_body.txt >> $GITHUB_OUTPUT
+        fi
+        echo "EOF" >> $GITHUB_OUTPUT 

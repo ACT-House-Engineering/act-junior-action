@@ -1,0 +1,110 @@
+name: 'Create Pull Request'
+description: 'Create a PR for changes with appropriate metadata'
+
+inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+  issue-number:
+    description: 'The issue number the PR addresses'
+    required: true
+  issue-title:
+    description: 'The issue title'
+    required: true
+  branch-name:
+    description: 'The branch containing changes'
+    required: true
+  base-branch:
+    description: 'The base branch to merge into'
+    required: false
+    default: 'main'
+  git-config-name:
+    description: 'Git user name for commits'
+    required: false
+    default: '🧒 ACT Junior'
+  git-config-email:
+    description: 'Git user email for commits'
+    required: false
+    default: 'beta@act.house'
+  extended-description:
+    description: 'Additional details to include in PR body'
+    required: false
+    default: ''
+
+outputs:
+  pr-number:
+    description: 'The PR number that was created'
+    value: ${{ steps.create-pr.outputs.pr_number }}
+  pr-url:
+    description: 'The URL of the created PR'
+    value: ${{ steps.create-pr.outputs.pr_url }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure git
+      shell: bash
+      run: |
+        # Only configure if values are provided
+        if [ -n "${{ inputs.git-config-name }}" ]; then
+          git config --global user.name "${{ inputs.git-config-name }}"
+        fi
+        
+        if [ -n "${{ inputs.git-config-email }}" ]; then
+          git config --global user.email "${{ inputs.git-config-email }}"
+        fi
+    
+    - name: Create Pull Request
+      id: create-pr
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        ISSUE_NUMBER="${{ inputs.issue-number }}"
+        BRANCH_NAME="${{ inputs.branch-name }}"
+        ISSUE_TITLE="${{ inputs.issue-title }}"
+        BASE_BRANCH="${{ inputs.base-branch }}"
+        EXTENDED_DESC="${{ inputs.extended-description }}"
+        
+        # Ensure temp directory exists
+        mkdir -p ./.temp
+        
+        # Create PR description
+        echo "This PR addresses issue #$ISSUE_NUMBER." > ./.temp/pr_body.txt
+        echo "" >> ./.temp/pr_body.txt
+        echo "## Changes" >> ./.temp/pr_body.txt
+        echo "- Modified code to fix the issue as described" >> ./.temp/pr_body.txt
+        echo "- Implemented changes based on AI analysis" >> ./.temp/pr_body.txt
+        echo "" >> ./.temp/pr_body.txt
+        
+        # Add extended description if provided
+        if [ -n "$EXTENDED_DESC" ]; then
+          echo "$EXTENDED_DESC" >> ./.temp/pr_body.txt
+          echo "" >> ./.temp/pr_body.txt
+        fi
+        
+        echo "## Validation" >> ./.temp/pr_body.txt
+        echo "- The changes have been automatically generated and tested" >> ./.temp/pr_body.txt
+        echo "- Please review and provide feedback" >> ./.temp/pr_body.txt
+        echo "" >> ./.temp/pr_body.txt
+        echo "Closes #$ISSUE_NUMBER" >> ./.temp/pr_body.txt
+        
+        # Create PR using the body from the file
+        PR_URL=$(gh pr create --base "$BASE_BRANCH" --head "$BRANCH_NAME" \
+          --title "Fix #$ISSUE_NUMBER: $ISSUE_TITLE" \
+          --body-file ./.temp/pr_body.txt \
+          --label "ai-generated" || echo "")
+        
+        if [ -z "$PR_URL" ]; then
+          echo "Failed to create PR"
+          exit 1
+        fi
+        
+        echo "PR created: $PR_URL"
+        
+        # Extract PR number from URL
+        PR_NUMBER=$(echo $PR_URL | grep -oE '[0-9]+$')
+        
+        # Output the PR details
+        echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+        echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT 

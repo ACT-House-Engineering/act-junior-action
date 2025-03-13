@@ -1,0 +1,50 @@
+name: 'Cleanup Temporary Files'
+description: 'Remove temporary files and artifacts from the workspace'
+
+inputs:
+  include-aider-files:
+    description: 'Whether to clean up Aider-specific files'
+    required: false
+    default: 'true'
+  include-env-files:
+    description: 'Whether to clean up .env files'
+    required: false
+    default: 'true'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Cleanup temporary files
+      shell: bash
+      run: |
+        echo "Cleaning up temporary files..."
+        
+        # Always clean up the temp directory
+        if [ -d "./.temp" ]; then
+          rm -rf ./.temp
+          echo "Removed .temp directory"
+        fi
+        
+        # Remove temp files at root level
+        find . -maxdepth 1 -name "*_*.txt" -delete
+        echo "Removed temporary text files"
+        
+        # Delete temporary markdown files except README
+        find . -maxdepth 1 -name "*.md" -not -name "README.md" -delete
+        echo "Removed temporary markdown files"
+        
+        # Clean up Aider files if requested
+        if [ "${{ inputs.include-aider-files }}" = "true" ]; then
+          rm -f ./.aider.chat.history.md
+          rm -f ./.aider.input.md
+          rm -f ./.aider.output.md
+          echo "Removed Aider files"
+        fi
+        
+        # Clean up .env files if requested
+        if [ "${{ inputs.include-env-files }}" = "true" ]; then
+          rm -f ./.env
+          echo "Removed .env files"
+        fi
+        
+        echo "Cleanup completed" 

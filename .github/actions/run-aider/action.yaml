@@ -1,0 +1,119 @@
+name: 'Run Aider'
+description: 'Execute Aider AI to solve an issue or complete a task'
+
+inputs:
+  anthropic-api-key:
+    description: 'Anthropic API key for Claude models'
+    required: true
+  aider-model:
+    description: 'The AI model to use with Aider'
+    required: true
+    default: 'claude-3-5-sonnet-20241022'
+  prompt-file:
+    description: 'Path to the file containing the prompt'
+    required: true
+  target-files:
+    description: 'Specific files to focus on (space-separated)'
+    required: false
+    default: ''
+  git-config-name:
+    description: 'Git user name for commits'
+    required: false
+    default: '🧒 ACT Junior'
+  git-config-email:
+    description: 'Git user email for commits'
+    required: false
+    default: 'beta@act.house'
+
+outputs:
+  modified-files:
+    description: 'List of files modified by Aider'
+    value: ${{ steps.run-aider.outputs.modified_files }}
+  success:
+    description: 'Whether Aider successfully made changes'
+    value: ${{ steps.run-aider.outputs.success }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure git
+      shell: bash
+      run: |
+        # Only configure if values are provided
+        if [ -n "${{ inputs.git-config-name }}" ]; then
+          git config --global user.name "${{ inputs.git-config-name }}"
+        fi
+        
+        if [ -n "${{ inputs.git-config-email }}" ]; then
+          git config --global user.email "${{ inputs.git-config-email }}"
+        fi
+    
+    - name: Run Aider
+      id: run-aider
+      shell: bash
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        AIDER_MODEL: ${{ inputs.aider-model }}
+      run: |
+        # Create temporary directory if it doesn't exist
+        mkdir -p ./.temp
+        
+        # Create .env file with Aider configuration
+        cat << EOF > .env
+        # Aider configuration - Created $(date)
+        ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
+        AIDER_MODEL=$AIDER_MODEL
+        # Output settings
+        AIDER_PRETTY=false
+        AIDER_STREAM=false
+        # Git settings
+        AIDER_GITIGNORE=false
+        # Disable auto-commits
+        AIDER_AUTO_COMMITS=false
+        # Non-interactive mode
+        AIDER_YES=true
+        EOF
+        
+        # Run aider to solve the issue
+        TARGET_FILES="${{ inputs.target-files }}"
+        PROMPT_FILE="${{ inputs.prompt-file }}"
+        
+        # Verify the prompt file exists
+        if [ ! -f "$PROMPT_FILE" ]; then
+          echo "Error: Prompt file $PROMPT_FILE not found"
+          exit 1
+        fi
+        
+        set +e  # Don't exit on error
+        if [ -n "$TARGET_FILES" ]; then
+          # If we have specific target files, provide them to aider
+          echo "Running aider with specified target files: $TARGET_FILES"
+          aider --yes-always --message-file "$PROMPT_FILE" $TARGET_FILES
+        else
+          # Otherwise, let aider find relevant files
+          echo "Running aider without specified target files"
+          aider --yes-always --message-file "$PROMPT_FILE"
+        fi
+        AIDER_EXIT=$?
+        set -e  # Restore exit on error
+        
+        if [ $AIDER_EXIT -ne 0 ]; then
+          echo "Aider exited with error code: $AIDER_EXIT"
+        fi
+        
+        # Clean up the .env file to avoid leaking secrets
+        rm -f .env
+        
+        # Get list of modified files (excluding temp files)
+        MODIFIED_FILES=$(git status --porcelain | grep -v "^??" | grep -v "./.temp/" | awk '{print $2}')
+        
+        if [ -z "$MODIFIED_FILES" ]; then
+          echo "No changes were made by aider"
+          echo "success=false" >> $GITHUB_OUTPUT
+          echo "modified_files=" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+        
+        echo "Modified files: $MODIFIED_FILES"
+        echo "success=true" >> $GITHUB_OUTPUT
+        echo "modified_files=$MODIFIED_FILES" >> $GITHUB_OUTPUT 
