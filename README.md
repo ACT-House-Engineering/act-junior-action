@@ -1,10 +1,10 @@
 # 🧒 [ACT Junior Action](https://github.com/marketplace/actions/act-junior)
 
-ACT Junior ([source](https://github.com/sderev/act-junior)) is a [GitHub Action](https://github.com/marketplace/actions/act-junior) that uses AI to automatically handle [issues](https://docs.github.com/en/issues) and [pull requests](https://docs.github.com/en/pull-requests). It leverages [Claude AI](https://claude.ai) to analyze and respond to tasks, create content, and generate solutions. View it on the [GitHub Marketplace](https://github.com/marketplace/actions/act-junior) or check the [latest releases](https://github.com/sderev/act-junior/releases).
+[ACT Junior](https://github.com/marketplace/actions/act-junior) ([source](https://github.com/sderev/act-junior)) is a [GitHub Action](https://github.com/marketplace/actions/act-junior) that uses AI to automatically handle [issues](https://docs.github.com/en/issues) and [pull requests](https://docs.github.com/en/pull-requests). It leverages [Claude AI](https://claude.ai) to analyze and respond to tasks, create content, and generate solutions. View it on the [GitHub Marketplace](https://github.com/marketplace/actions/act-junior) or check the [latest releases](https://github.com/sderev/act-junior/releases).
 
 ## Features
 
-- Automatically responds to [issues](https://docs.github.com/en/issues) and [pull requests](https://docs.github.com/en/pull-requests) when mentioned with `@act-junior`
+- Automatically responds to [issues](https://docs.github.com/en/issues) and [pull requests](https://docs.github.com/en/pull-requests) when mentioned with [`@act-junior`](https://github.com/marketplace/actions/act-junior)
 - Creates [AI-generated](https://claude.ai) poems and content
 - [Self-updates](https://docs.github.com/en/actions/using-workflows/about-workflows) and maintains its own workflow
 - Creates [pull requests](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) with solutions
