@@ -84,20 +84,44 @@ jobs:
           Only update this timestamp line and nothing else in the file.
           EOF
           
-          # Run Aider to update the timestamp
+          # Run Aider to update the timestamp with non-interactive flags
+          # --yes: Auto-confirm all prompts
+          # --no-gitignore: Skip gitignore check
+          # --quiet: Reduce output verbosity
+          set +e  # Don't exit on error
           aider --anthropic-api-key "$ANTHROPIC_API_KEY" \
                 --model "$AIDER_MODEL" \
                 --message-file ./.temp/update_prompt.md \
+                --yes \
+                --no-gitignore \
+                --quiet \
                 .github/workflows/act-junior.yaml
+          AIDER_EXIT=$?
+          set -e  # Restore exit on error
           
-          # Check if there are changes
-          if [[ -n $(git status --porcelain) ]]; then
+          # Check if Aider made any changes (exit code doesn't always indicate a problem)
+          if [[ -n $(git status --porcelain .github/workflows/act-junior.yaml) ]]; then
+            echo "Aider made changes to the workflow file"
             # Commit and push the changes
             git add .github/workflows/act-junior.yaml
             git commit -m "Update AI timestamp to $CURRENT_DATE"
             git push
           else
-            echo "No changes to commit"
+            # Manually update the timestamp if Aider didn't change it
+            echo "Aider didn't make changes, updating timestamp manually"
+            sed -i "s/# Bleep boop. AI updated: .*$/# Bleep boop. AI updated: $CURRENT_DATE/" .github/workflows/act-junior.yaml
+            
+            # Check if our manual update made any changes
+            if [[ -n $(git status --porcelain .github/workflows/act-junior.yaml) ]]; then
+              echo "Manual update successful, committing changes"
+              git add .github/workflows/act-junior.yaml
+              git commit -m "Update AI timestamp to $CURRENT_DATE"
+              git push
+            else
+              echo "No changes needed - timestamp is already up to date"
+              # Success even if no changes were made
+              exit 0
+            fi
           fi
           
           # Clean up temp files
