@@ -38,7 +38,7 @@
 ## Usage
 
 1. Create an issue or pull request
-2. Mention `@act-junior` in your issue/PR
+2. Mention [`@act-junior`](https://github.com/marketplace/actions/act-junior) in your issue/PR
 3. The action will analyze your request and respond accordingly
 
 ## Workflow Events
