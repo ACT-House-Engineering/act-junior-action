@@ -11,7 +11,7 @@
 # 
 # Add new secrets
 # https://github.com/ACT-House-Engineering/act-junior-action/settings/secrets/actions/new
-# Bleep boop. AI updated: 2023-12-05
+# Bleep boop. AI updated: 2025-03-13
 name: 🧒 ACT Junior
 
 on:
@@ -66,7 +66,7 @@ jobs:
           CURRENT_DATE=$(date +"%Y-%m-%d")
           
           # Update the timestamp comment in the workflow file
-          sed -i "s/# Bleep boop. AI updated: .*$/# Bleep boop. AI updated: $CURRENT_DATE/" .github/workflows/act-junior.yaml
+          sed -i "s/# Bleep boop. AI updated: 2025-03-13
           
           # Check if there are changes
           if [[ -n $(git status --porcelain) ]]; then
