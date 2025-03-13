@@ -14,12 +14,12 @@ ACT Junior is a GitHub Action that uses AI to automatically handle issues and pu
 
 ### Prerequisites
 
-1. GitHub Personal Access Token (PAT) with the following permissions:
+1. [GitHub Personal Access Token (PAT)](https://github.com/settings/tokens/new) with the following permissions:
    - Read and Write access to actions, code, deployments, issues, pull requests, and workflows
    - Read access to code and metadata
    - (For Organizations) Read and Write access to organization private registries
 
-2. Anthropic API Key for Claude AI access
+2. [Anthropic API Key](https://console.anthropic.com/account/keys) for Claude AI access
 
 ### Configuration
 
