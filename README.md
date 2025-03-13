@@ -1,6 +1,6 @@
-# 🧒 ACT Junior Action
+# 🧒 [ACT Junior Action](https://github.com/marketplace/actions/act-junior)
 
-ACT Junior is a GitHub Action that uses AI to automatically handle issues and pull requests. It leverages Claude AI to analyze and respond to tasks, create content, and generate solutions.
+ACT Junior ([source](https://github.com/sderev/act-junior)) is a [GitHub Action](https://github.com/marketplace/actions/act-junior) that uses AI to automatically handle [issues](https://docs.github.com/en/issues) and [pull requests](https://docs.github.com/en/pull-requests). It leverages [Claude AI](https://claude.ai) to analyze and respond to tasks, create content, and generate solutions. View it on the [GitHub Marketplace](https://github.com/marketplace/actions/act-junior).
 
 ## Features
 
@@ -14,12 +14,12 @@ ACT Junior is a GitHub Action that uses AI to automatically handle issues and pu
 
 ### Prerequisites
 
-1. GitHub Personal Access Token (PAT) with the following permissions:
-   - Read and Write access to actions, code, deployments, issues, pull requests, and workflows
+1. [GitHub Personal Access Token (PAT)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) with the following permissions:
+   - Read and Write access to [actions](https://docs.github.com/en/actions), code, deployments, [issues](https://docs.github.com/en/issues), [pull requests](https://docs.github.com/en/pull-requests), and [workflows](https://docs.github.com/en/actions/using-workflows)
    - Read access to code and metadata
-   - (For Organizations) Read and Write access to organization private registries
+   - (For Organizations) Read and Write access to [organization private registries](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
 
-2. Anthropic API Key for Claude AI access
+2. [Anthropic API Key](https://console.anthropic.com/account/keys) for [Claude AI](https://claude.ai) access
 
 ### Configuration
 
@@ -62,7 +62,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is open source and available under the MIT License.
+This project is open source and available under the [MIT License](LICENSE).
 
 ## Support
 
