@@ -77,8 +77,8 @@ jobs:
           AIDER_MODEL: ${{ env.AIDER_MODEL }}
         run: |
           # Configure git
-          git config --global user.name "GitHub Actions Bot"
-          git config --global user.email "actions@github.com"
+          git config --global user.name "🧒 ACT Junior"
+          git config --global user.email "beta@act.house"
           
           # Get current date and time
           CURRENT_DATE=$(date +"%Y-%m-%d")
@@ -417,8 +417,8 @@ jobs:
           ISSUE_TITLE="${{ steps.issue_info.outputs.issue_title }}"
           
           # Configure git for the GitHub Actions bot
-          git config --global user.name "GitHub Actions Bot"
-          git config --global user.email "actions@github.com"
+          git config --global user.name "🧒 ACT Junior"
+          git config --global user.email "beta@act.house"
           
           # Ensure temp directory exists
           mkdir -p ./.temp
