@@ -1,6 +1,6 @@
-# 🧒 ACT Junior Action
+# 🧒 [ACT Junior Action](https://github.com/marketplace/actions/act-junior)
 
-ACT Junior is a [GitHub Action](https://github.com/marketplace/actions/act-junior) that uses AI to automatically handle issues and pull requests. It leverages [Claude AI](https://claude.ai) to analyze and respond to tasks, create content, and generate solutions.
+ACT Junior ([source](https://github.com/sderev/act-junior)) is a [GitHub Action](https://github.com/marketplace/actions/act-junior) that uses AI to automatically handle issues and pull requests. It leverages [Claude AI](https://claude.ai) to analyze and respond to tasks, create content, and generate solutions.
 
 ## Features
 
