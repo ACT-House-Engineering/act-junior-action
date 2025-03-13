@@ -327,6 +327,30 @@ jobs:
           fi
           echo "EOF" >> $GITHUB_OUTPUT
 
+      - name: Reply with workflow URL
+        env:
+          GH_TOKEN: ${{ secrets.PAT_GITHUB }}
+        run: |
+          # Get the issue number from previous step
+          ISSUE_NUMBER="${{ steps.issue_info.outputs.issue_number }}"
+          
+          # Construct the workflow run URL
+          WORKFLOW_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          
+          # Create the comment message
+          COMMENT="On it! I'm working on this request.\n\nYou can follow my progress here: $WORKFLOW_URL"
+          
+          # Post the comment to the issue/PR
+          if [[ "${{ github.event_name }}" == "pull_request"* ]]; then
+            # For pull requests
+            gh pr comment "$ISSUE_NUMBER" --body "$COMMENT"
+          else
+            # For issues or issue comments
+            gh issue comment "$ISSUE_NUMBER" --body "$COMMENT"
+          fi
+          
+          echo "Posted 'On it!' comment with workflow URL: $WORKFLOW_URL"
+
       - name: Analyze issue and create solution branch
         id: solution
         env:
