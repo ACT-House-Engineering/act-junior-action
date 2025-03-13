@@ -28,6 +28,7 @@ on:
   push:
     paths:
       - '.github/workflows/act-junior.yaml'
+      - 'tasks/create-poem.md'
 
 # Required permissions for creating PRs from workflows
 permissions:
@@ -48,11 +49,11 @@ env:
 # Note: This workflow requires a Personal Access Token with 'repo' scope
 # stored in the repository secrets as PAT_GITHUB to create pull requests
 jobs:
-  update-timestamp:
+  verify-aider:
     # Only run for push events to this workflow file
-    # and avoid running when the commit is already updating the timestamp
+    # and avoid running when the commit is already verifying Aider
     # LEARNING: Self-updating systems need safeguards against infinite loops. Always check commit messages and content changes.
-    if: github.event_name == 'push' && !contains(github.event.head_commit.message, 'Update AI timestamp')
+    if: github.event_name == 'push' && !contains(github.event.head_commit.message, 'Add new poem from Aider')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -63,7 +64,7 @@ jobs:
       - name: Install Aider
         run: pip install aider-chat
         
-      - name: Update timestamp using Aider
+      - name: Create poem using Aider
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           AIDER_MODEL: ${{ env.AIDER_MODEL }}
@@ -78,7 +79,7 @@ jobs:
           
           # Replace date and time placeholders in the prompt file with current values
           mkdir -p ./.temp
-          sed -e "s/\$CURRENT_DATE/$CURRENT_DATE/g" -e "s/\$CURRENT_TIME/$CURRENT_TIME/g" tasks/self-update-confirmation.md > ./.temp/processed_prompt.md
+          sed -e "s/\$CURRENT_DATE/$CURRENT_DATE/g" -e "s/\$CURRENT_TIME/$CURRENT_TIME/g" tasks/create-poem.md > ./.temp/processed_prompt.md
           
           # LEARNING: AI tools need non-interactive mode in CI. Use flags like --yes and --quiet to bypass prompts.
           # Create .env file with Aider configuration
@@ -97,21 +98,26 @@ jobs:
           
           # Run Aider using .env file for configuration
           set +e  # Don't exit on error
-          aider --yes-always --message-file ./.temp/processed_prompt.md .github/workflows/act-junior.yaml
+          aider --yes-always --message-file ./.temp/processed_prompt.md
           AIDER_EXIT=$?
           set -e  # Restore exit on error
           
           # LEARNING: AI tools require defensive coding. Use fallbacks, capture exit codes, and handle all outcome scenarios.
-          # Check if Aider made any changes (exit code doesn't always indicate a problem)
-          if [[ -n $(git status --porcelain .github/workflows/act-junior.yaml) ]]; then
-            echo "Aider made changes to the workflow file"
+          # Check if Aider created the poem file
+          if [ -f "poem.md" ]; then
+            echo "Aider successfully created the poem file"
+            # Add date to the poem filename to keep history
+            POEM_FILENAME="poems/poem-$CURRENT_DATE.md"
+            mkdir -p poems
+            cp poem.md "$POEM_FILENAME"
+            
             # Commit and push the changes
-            git add .github/workflows/act-junior.yaml
-            git commit -m "Update AI timestamp to $CURRENT_DATE $CURRENT_TIME"
+            git add poem.md "$POEM_FILENAME"
+            git commit -m "Add new poem from Aider ($CURRENT_DATE $CURRENT_TIME)"
             git push
           else
-            # If Aider didn't make changes, fail the workflow
-            echo "Aider didn't make changes to the workflow file"
+            # If Aider didn't create the poem, fail the workflow
+            echo "Aider didn't create the poem file"
             echo "Ensuring the workflow fails if the AI component fails"
             exit 1
           fi
