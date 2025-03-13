@@ -13,7 +13,7 @@
 # 
 # Add new secrets
 # https://github.com/ACT-House-Engineering/act-junior-action/settings/secrets/actions/new
-# Bleep boop. AI updated: 2025-03-13
+# Bleep boop. AI updated: 2025-03-13 00:00:00
 name: 🧒 ACT Junior
 
 on:
@@ -72,12 +72,13 @@ jobs:
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
           
-          # Get current date
+          # Get current date and time
           CURRENT_DATE=$(date +"%Y-%m-%d")
+          CURRENT_TIME=$(date +"%H:%M:%S")
           
-          # Replace date placeholder in the prompt file with current date
+          # Replace date and time placeholders in the prompt file with current values
           mkdir -p ./.temp
-          sed "s/\$CURRENT_DATE/$CURRENT_DATE/g" tasks/self-update-confirmation.md > ./.temp/processed_prompt.md
+          sed -e "s/\$CURRENT_DATE/$CURRENT_DATE/g" -e "s/\$CURRENT_TIME/$CURRENT_TIME/g" tasks/self-update-confirmation.md > ./.temp/processed_prompt.md
           
           # LEARNING: AI tools need non-interactive mode in CI. Use flags like --yes and --quiet to bypass prompts.
           # Create .env file with Aider configuration
@@ -106,7 +107,7 @@ jobs:
             echo "Aider made changes to the workflow file"
             # Commit and push the changes
             git add .github/workflows/act-junior.yaml
-            git commit -m "Update AI timestamp to $CURRENT_DATE"
+            git commit -m "Update AI timestamp to $CURRENT_DATE $CURRENT_TIME"
             git push
           else
             # If Aider didn't make changes, fail the workflow
