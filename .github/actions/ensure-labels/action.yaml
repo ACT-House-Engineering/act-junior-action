@@ -1,0 +1,38 @@
+name: 'Ensure GitHub Labels'
+description: 'Creates required labels if they do not exist'
+
+inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+  labels:
+    description: 'JSON array of label definitions'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Create missing labels
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        LABELS: ${{ inputs.labels }}
+      run: |
+        # Parse each label from JSON array and create if missing
+        echo "Creating required labels if they don't exist..."
+        
+        # Process the JSON array of labels
+        echo "$LABELS" | jq -c '.[]' | while read -r label; do
+          NAME=$(echo "$label" | jq -r '.name')
+          COLOR=$(echo "$label" | jq -r '.color')
+          DESCRIPTION=$(echo "$label" | jq -r '.description')
+          
+          # Check if label exists and create if missing
+          if ! gh label list | grep -q "$NAME"; then
+            echo "Creating label: $NAME"
+            gh label create "$NAME" --color "$COLOR" \
+              --description "$DESCRIPTION" || true
+          else
+            echo "Label already exists: $NAME"
+          fi
+        done 
