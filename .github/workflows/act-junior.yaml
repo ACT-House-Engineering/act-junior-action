@@ -9,6 +9,8 @@
 # Create GitHub PAT (Can be Personal or Org)
 # https://github.com/settings/personal-access-tokens/new
 # 
+# PATs need specific permissions for workflow files. Token errors are often cryptic 403s. Always verify scopes.
+# 
 # Add new secrets
 # https://github.com/ACT-House-Engineering/act-junior-action/settings/secrets/actions/new
 # Bleep boop. AI updated: 2025-03-13
@@ -42,12 +44,14 @@ env:
   # - claude-3-5-sonnet-20241022 (Anthropic)
   AIDER_MODEL: claude-3-5-sonnet-20241022
 
+# LEARNING: Debug workflows with 'gh run watch' and 'gh run view --log-failed'. Add logs for context.
 # Note: This workflow requires a Personal Access Token with 'repo' scope
 # stored in the repository secrets as PAT_GITHUB to create pull requests
 jobs:
   update-timestamp:
     # Only run for push events to this workflow file
     # and avoid running when the commit is already updating the timestamp
+    # LEARNING: Self-updating systems need safeguards against infinite loops. Always check commit messages and content changes.
     if: github.event_name == 'push' && !contains(github.event.head_commit.message, 'Update AI timestamp')
     runs-on: ubuntu-latest
     steps:
@@ -78,12 +82,13 @@ jobs:
           
           Please update the timestamp comment in the workflow file.
           
-          Find the line that says "# Bleep boop. AI updated: 2025-03-13
-          update it to "# Bleep boop. AI updated: 2025-03-13
+          Find the line that says "# Bleep boop. AI updated: [DATE]" and
+          update it to "# Bleep boop. AI updated: $CURRENT_DATE"
           
           Only update this timestamp line and nothing else in the file.
           EOF
           
+          # LEARNING: AI tools need non-interactive mode in CI. Use flags like --yes and --quiet to bypass prompts.
           # Run Aider to update the timestamp with non-interactive flags
           # --yes: Auto-confirm all prompts
           # --no-gitignore: Skip gitignore check
@@ -99,6 +104,7 @@ jobs:
           AIDER_EXIT=$?
           set -e  # Restore exit on error
           
+          # LEARNING: AI tools require defensive coding. Use fallbacks, capture exit codes, and handle all outcome scenarios.
           # Check if Aider made any changes (exit code doesn't always indicate a problem)
           if [[ -n $(git status --porcelain .github/workflows/act-junior.yaml) ]]; then
             echo "Aider made changes to the workflow file"
@@ -107,21 +113,10 @@ jobs:
             git commit -m "Update AI timestamp to $CURRENT_DATE"
             git push
           else
-            # Manually update the timestamp if Aider didn't change it
-            echo "Aider didn't make changes, updating timestamp manually"
-            sed -i "s/# Bleep boop. AI updated: 2025-03-13
-            
-            # Check if our manual update made any changes
-            if [[ -n $(git status --porcelain .github/workflows/act-junior.yaml) ]]; then
-              echo "Manual update successful, committing changes"
-              git add .github/workflows/act-junior.yaml
-              git commit -m "Update AI timestamp to $CURRENT_DATE"
-              git push
-            else
-              echo "No changes needed - timestamp is already up to date"
-              # Success even if no changes were made
-              exit 0
-            fi
+            # If Aider didn't make changes, fail the workflow
+            echo "Aider didn't make changes to the workflow file"
+            echo "Ensuring the workflow fails if the AI component fails"
+            exit 1
           fi
           
           # Clean up temp files
