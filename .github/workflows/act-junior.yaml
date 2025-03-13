@@ -92,6 +92,8 @@ jobs:
           AIDER_STREAM=false
           # Git settings
           AIDER_GITIGNORE=false
+          # Disable auto-commits
+          AIDER_AUTO_COMMITS=false
           # Non-interactive mode
           AIDER_YES=true
           EOF
