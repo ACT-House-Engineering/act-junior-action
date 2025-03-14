@@ -1,0 +1,32 @@
+name: ACT Junior Basic Usage
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+  pull_request:
+    types: [opened, edited, labeled]
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+# Required permissions for creating PRs from workflows
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  act-junior:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run ACT Junior
+        uses: ACT-House-Engineering/act-junior-action@v1
+        with:
+          github-token: ${{ secrets.PAT_GITHUB }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Optional: customize the trigger keyword
+          # trigger-keyword: '@my-assistant'
+          # Optional: choose a different AI model
+          # aider-model: 'claude-3-opus-20240229' 

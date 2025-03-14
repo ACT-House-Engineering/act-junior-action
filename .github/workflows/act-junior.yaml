@@ -64,6 +64,12 @@ jobs:
       !contains(github.event.head_commit.message, 'Add new poem from Aider')
     runs-on: ubuntu-latest
     steps:
+      # IMPORTANT: Must checkout the repository before using a local action
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_GITHUB }}
+          
       # Use our local marketplace action definition
       - name: Run ACT Junior for verification
         id: act-junior

@@ -1,73 +1,152 @@
-# 🧒 ACT Junior Action
+# ACT Junior GitHub Action
 
-ACT Junior is a GitHub Action that uses AI to automatically handle issues and pull requests. It leverages Claude AI to analyze and respond to tasks, create content, and generate solutions.
+An AI assistant that autonomously solves issues, responds to comments, 
+and creates pull requests using Claude AI models.
 
-> Note: This README was written by Claude AI as part of the ACT Junior project's commitment to AI-driven development.
+## Overview
+
+ACT Junior is a GitHub Action that leverages the power of Anthropic's 
+Claude AI to automatically:
+
+1. Respond to issues, pull requests, and comments
+2. Analyze code problems and implement solutions 
+3. Create pull requests with fixes
+
+The action is triggered by mentioning `@act-junior` in issues, PRs, or 
+comments, or by applying the `ai-solve` label.
 
 ## Features
 
-- Automatically responds to issues and pull requests when mentioned with `@act-junior`
-- Creates AI-generated poems and content
-- Self-updates and maintains its own workflow
-- Creates pull requests with solutions
-- Handles code changes and repository updates
-
-## Setup
-
-### Prerequisites
-
-1. GitHub Personal Access Token (PAT) with the following permissions:
-   - Read and Write access to actions, code, deployments, issues, pull requests, and workflows
-   - Read access to code and metadata
-   - (For Organizations) Read and Write access to organization private registries
-
-2. Anthropic API Key for Claude AI access
-
-### Configuration
-
-1. Create the required secrets in your repository:
-   - `PAT_GITHUB`: Your [GitHub Personal Access Token](https://github.com/settings/personal-access-tokens/new)
-   - `ANTHROPIC_API_KEY`: Your Anthropic API Key
-
-   [Add these secrets](https://github.com/settings/secrets/actions/new) to your repository's Actions secrets.
-
-2. The action is configured via environment variables in the workflow:
-   ```yaml
-   env:
-     ACT_TRIGGER_KEYWORD: '@act-junior'
-     ACT_DEFAULT_MODEL: 'claude-3-5-sonnet-20241022'
-     AIDER_MODEL: 'claude-3-5-sonnet-20241022'
-   ```
+- 🤖 Autonomous issue resolution
+- 💬 Responds to comments and mentions
+- 🛠️ Creates branches with fixes
+- 🔄 Opens pull requests automatically
+- 📝 Documents changes with proper commit messages
 
 ## Usage
 
-1. Create an issue or pull request
-2. Mention `@act-junior` in your issue/PR
-3. The action will analyze your request and respond accordingly
+### Basic Configuration
 
-## Workflow Events
+Create a workflow file in `.github/workflows/act-junior.yml`:
 
-The action triggers on:
-- Issues: opened, edited, labeled
-- Pull Requests: opened, edited, labeled
-- Issue Comments: created
-- PR Review Comments: created
-- Push events to specific files
+```yaml
+name: ACT Junior
 
-## Security
+on:
+  issues:
+    types: [opened, edited, labeled]
+  pull_request:
+    types: [opened, edited, labeled]
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
 
-- Uses secure token handling for GitHub and Anthropic authentication
-- Implements safeguards against infinite loops
-- Cleans up temporary files after execution
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  act-junior:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run ACT Junior
+        uses: ACT-House-Engineering/act-junior-action@v1
+        with:
+          github-token: ${{ secrets.PAT_GITHUB }}  
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+```
+
+### Required Secrets
+
+You need to set up the following secrets in your repository:
+
+1. `PAT_GITHUB`: A Personal Access Token with:
+   - Read and Write access to actions, code, issues, and pull requests
+   - Read access to metadata
+
+2. `ANTHROPIC_API_KEY`: Your Anthropic API key for Claude models
+
+### Advanced Configuration
+
+```yaml
+name: ACT Junior Advanced
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+  pull_request:
+    types: [opened, edited, labeled]
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  act-junior:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run ACT Junior
+        uses: ACT-House-Engineering/act-junior-action@v1
+        with:
+          github-token: ${{ secrets.PAT_GITHUB }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          trigger-keyword: '@my-ai-assistant'
+          aider-model: 'claude-3-opus-20240229'
+          bot-username: 'AI Assistant'
+          git-email: 'ai-bot@example.com'
+```
+
+## Inputs
+
+| Input | Description | Required | Default |
+|-------|-------------|----------|---------|
+| `github-token` | GitHub token with repository access | Yes | - |
+| `anthropic-api-key` | Anthropic API key for Claude | Yes | - |
+| `trigger-keyword` | Keyword to trigger the action | No | `@act-junior` |
+| `aider-model` | AI model to use with Aider | No | `claude-3-5-sonnet-20241022` |
+| `bot-username` | Name for bot comments | No | `🧒 ACT Junior` |
+| `git-email` | Email for git commits | No | `beta@act.house` |
+| `task-file` | Task file for AI verification | No | - |
+
+## Outputs
+
+| Output | Description |
+|--------|-------------|
+| `pull-request-url` | URL of the created pull request |
+| `success` | Whether the action completed successfully |
+| `modified-files` | List of files modified by the action |
+
+## How It Works
+
+1. The action is triggered when:
+   - An issue or PR is created or edited with the trigger keyword
+   - A comment is posted with the trigger keyword
+   - The `ai-solve` label is applied
+
+2. ACT Junior:
+   - Analyzes the issue/PR content
+   - Creates a new branch
+   - Uses Aider and Claude to implement a solution
+   - Commits changes and creates a pull request
+   - Comments on the original issue with a link to the PR
+
+## License
+
+MIT
 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## License
+---
 
-This project is open source and available under the MIT License.
-
-## Support
-
-For support, please open an issue in the repository.
+Developed by [ACT House Engineering](https://github.com/ACT-House-Engineering)
