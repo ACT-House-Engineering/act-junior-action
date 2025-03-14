@@ -64,26 +64,19 @@ jobs:
       !contains(github.event.head_commit.message, 'Add new poem from Aider')
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      # Use our local marketplace action definition
+      - name: Run ACT Junior for verification
+        id: act-junior
+        uses: ./
         with:
-          token: ${{ secrets.PAT_GITHUB }}
-          
-      - name: Install Aider
-        uses: ./.github/actions/setup-aider
-        
-      - name: Create poem using Aider
-        id: create-poem
-        uses: ./.github/actions/run-aider
-        with:
+          github-token: ${{ secrets.PAT_GITHUB }}
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           aider-model: ${{ env.AIDER_MODEL }}
-          git-config-name: "🧒 ACT Junior"
-          git-config-email: "beta@act.house"
-          prompt-file: ${{ env.ACT_TASK_FILE }}
-          
+          bot-username: "${{ env.ACT_BOT_USERNAME }}"
+          task-file: ${{ env.ACT_TASK_FILE }}
+      
       - name: Check if poem was created
-        if: steps.create-poem.outputs.success == 'true'
+        if: steps.act-junior.outputs.success == 'true'
         run: |
           # Get current date and time
           CURRENT_DATE=$(date +"%Y-%m-%d")
@@ -102,12 +95,6 @@ jobs:
             echo "Ensuring the workflow fails if the AI component fails"
             exit 1
           fi
-      
-      - name: Cleanup
-        uses: ./.github/actions/cleanup-temp-files
-        with:
-          include-aider-files: 'true'
-          include-env-files: 'true'
 
   solve-issue:
     # Run this job when:
@@ -151,25 +138,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-          # No cache specified here to avoid lock file errors
-
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: true
-          # Add version explicitly to avoid errors
-          version: 8
-
-      - name: Install required utilities
-        run: |
-          # Make sure jq is installed for JSON processing
-          sudo apt-get update
-          sudo apt-get install -y jq
-
       - name: Ensure required labels exist
         uses: ./.github/actions/ensure-labels
         with:
@@ -183,130 +151,14 @@ jobs:
               {"name": "${{ env.ACT_TRIGGER_KEYWORD }}", "color": "0E8A16", "description": "Issue to be solved by AI Junior"}
             ]
 
-      - name: Install Aider
-        uses: ./.github/actions/setup-aider
-      
-      - name: Extract issue details
-        id: issue_info
-        uses: ./.github/actions/extract-issue-details
+      # Use our local marketplace action definition
+      - name: Run ACT Junior for issue solving
+        id: act-junior
+        uses: ./
         with:
           github-token: ${{ secrets.PAT_GITHUB }}
-          event-name: ${{ github.event_name }}
-          event-action: ${{ github.event.action }}
-          trigger-keyword: ${{ env.ACT_TRIGGER_KEYWORD }}
-
-      - name: Reply with workflow URL
-        uses: ./.github/actions/reply-with-url
-        with:
-          issue-number: ${{ steps.issue_info.outputs.issue-number }}
-          github-token: ${{ secrets.PAT_GITHUB }}
-          event-name: ${{ github.event_name }}
-          message-prefix: "On it! I'm working on this request."
-
-      - name: Analyze issue and create solution branch
-        id: solution
-        run: |
-          echo "Using AI model: ${{ env.AIDER_MODEL }}"
-          # Get issue details from previous step
-          ISSUE_NUMBER="${{ steps.issue_info.outputs.issue-number }}"
-          ISSUE_TITLE="${{ steps.issue_info.outputs.issue-title }}"
-          ISSUE_BODY="${{ steps.issue_info.outputs.issue-body }}"
-          TIMESTAMP=$(date +%s)
-          
-          # Extract relevant file(s) from issue title and body
-          # This helps focus Aider on the right files
-          TARGET_FILES=$(echo "$ISSUE_TITLE $ISSUE_BODY" | grep -o -E '(\.js|\.jsx|\.ts|\.tsx|\.md|\.css|\.html|\.json|\.yml|\.yaml)\b' | sort | uniq | tr '\n' ' ')
-          
-          # If no specific files found, set some default based on common patterns in the issue
-          if [ -z "$TARGET_FILES" ]; then
-            if [[ "$ISSUE_TITLE" == *"README"* ]] || [[ "$ISSUE_BODY" == *"README"* ]]; then
-              TARGET_FILES="README.md"
-            fi
-          fi
-          
-          echo "Target files identified: $TARGET_FILES"
-          
-          # Create a clean branch for the solution
-          git checkout -b fix/issue-$ISSUE_NUMBER-retry-$TIMESTAMP
-          
-          # Create a prompt file for aider
-          mkdir -p ./.temp
-          cat << EOF > ./.temp/issue_prompt.md
-          # Issue #$ISSUE_NUMBER: $ISSUE_TITLE
-          
-          $ISSUE_BODY
-          
-          ## Task
-          Please analyze this issue and implement a solution. Make the necessary code changes to fix the issue described above.
-          
-          Focus specifically on the following files if relevant: $TARGET_FILES
-          
-          Please ensure you:
-          1. Only modify the necessary files
-          2. Test your changes if applicable
-          3. Follow the existing code style and conventions
-          4. Consider edge cases in your implementation
-          5. Do not commit temporary files or debugging artifacts
-          EOF
-          
-          # Output the branch name for later steps
-          echo "branch=fix/issue-$ISSUE_NUMBER-retry-$TIMESTAMP" >> $GITHUB_OUTPUT
-          echo "target_files=$TARGET_FILES" >> $GITHUB_OUTPUT
-
-      - name: Run Aider on issue
-        id: run-aider
-        uses: ./.github/actions/run-aider
-        with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          trigger-keyword: '${{ env.ACT_TRIGGER_KEYWORD }}'
           aider-model: ${{ env.AIDER_MODEL }}
-          git-config-name: "🧒 ACT Junior"
-          git-config-email: "beta@act.house"
-          prompt-file: ./.temp/issue_prompt.md
-          target-files: ${{ steps.solution.outputs.target_files }}
-
-      - name: Check if Aider made changes
-        if: steps.run-aider.outputs.success == 'false'
-        env:
-          GH_TOKEN: ${{ secrets.PAT_GITHUB }}
-          ISSUE_NUMBER: ${{ steps.issue_info.outputs.issue-number }}
-        run: |
-          echo "No changes were made by aider, creating a comment on the issue"
-          gh issue comment "$ISSUE_NUMBER" --body "I attempted to solve this issue, but couldn't determine what changes to make. A human contributor may need to look at this."
-          gh issue edit "$ISSUE_NUMBER" --add-label "needs-human-attention"
-          exit 1
-
-      - name: Commit and push changes
-        if: steps.run-aider.outputs.success == 'true'
-        run: |
-          ISSUE_NUMBER="${{ steps.issue_info.outputs.issue-number }}"
-          ISSUE_TITLE="${{ steps.issue_info.outputs.issue-title }}"
-          MODIFIED_FILES="${{ steps.run-aider.outputs.modified-files }}"
-          
-          # Stage the modified files for commit
-          git add $MODIFIED_FILES
-          
-          # Commit the changes with a reference to the issue
-          git commit -m "Fix #$ISSUE_NUMBER: $ISSUE_TITLE"
-          
-          # Push the changes
-          git push origin "${{ steps.solution.outputs.branch }}"
-
-      - name: Create Pull Request
-        if: steps.run-aider.outputs.success == 'true'
-        id: create_pr
-        uses: ./.github/actions/create-pull-request
-        with:
-          github-token: ${{ secrets.PAT_GITHUB }}
-          issue-number: ${{ steps.issue_info.outputs.issue-number }}
-          issue-title: ${{ steps.issue_info.outputs.issue-title }}
-          branch-name: ${{ steps.solution.outputs.branch }}
-          base-branch: main
-          git-config-name: "🧒 ACT Junior"
-          git-config-email: "beta@act.house"
-
-      - name: Cleanup temporary files
-        if: always()
-        uses: ./.github/actions/cleanup-temp-files
-        with:
-          include-aider-files: 'true'
-          include-env-files: 'true' 
+          bot-username: "${{ env.ACT_BOT_USERNAME }}"
+          git-email: "beta@act.house" 
