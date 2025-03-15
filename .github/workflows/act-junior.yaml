@@ -55,6 +55,8 @@ env:
 # Note: This workflow requires a Personal Access Token with 'repo' scope
 # stored in the repository secrets as PAT_GITHUB to create pull requests
 jobs:
+  # Local Test Command (WIP)
+  # $ act -j verify-aider
   verify-aider:
     # Only run for push events to this workflow file
     # and avoid running when the commit is already verifying Aider
