@@ -13,7 +13,6 @@
 # 
 # Add new secrets
 # https://github.com/ACT-House-Engineering/act-junior-action/settings/secrets/actions/new
-# Bleep boop. AI updated: 2025-03-13 00:00:00
 name: 🧒 ACT Junior
 
 on:
