@@ -1,0 +1,58 @@
+# Before you start: 
+# Setup PAT_GITHUB & ANTHROPIC_API_KEY Secrets
+# 
+# Permissions for PAT
+# - (Orgs Only) Read and Write access to organization private registries
+# - Read access to code and metadata
+# - Read and Write access to actions, code, deployments, issues, pull requests, and workflows
+# 
+# Create GitHub PAT (Can be Personal or Org)
+# https://github.com/settings/personal-access-tokens/new
+# 
+# PATs need specific permissions for workflow files. Token errors are often cryptic 403s. Always verify scopes.
+# 
+# Add new secrets
+# https://github.com/ACT-House-Engineering/act-junior-action/settings/secrets/actions/new
+name: 🧒 ACT Junior - SWE Mode
+description: WIP - AI Agent that uses SWE-Agent
+
+on:
+  # You can customize these triggers as needed
+  workflow_dispatch:  # Allows manual triggering
+  push:
+    paths:
+      - '.github/workflows/act-junior-swe.yaml'
+
+# Environment variables that can be customized
+env:
+  SWE_AGENT_DIR: swe-agent  # Configure the directory name here
+
+jobs:
+  clone-swe-agent:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Create directory for SWE-agent
+        run: mkdir -p ${{ env.SWE_AGENT_DIR }}
+      
+      - name: Clone SWE-agent repository
+        run: |
+          # Clone the SWE-agent repository into the subdirectory
+          git clone https://github.com/SWE-agent/SWE-agent.git ${{ env.SWE_AGENT_DIR }}
+          
+          # Print confirmation
+          echo "SWE-agent repository cloned successfully into ${{ env.SWE_AGENT_DIR }}/"
+          ls -la ${{ env.SWE_AGENT_DIR }}/
+      
+      # Optionally, you can add steps to install SWE-agent from source
+      - name: Install SWE-agent (optional)
+        run: |
+          # Change to the SWE-agent directory
+          cd ${{ env.SWE_AGENT_DIR }}
+          
+          # Install SWE-agent (commented out by default)
+          # python -m pip install --upgrade pip && pip install --editable .
+        # Uncomment the following to actually run the installation
+        # working-directory: ${{ env.SWE_AGENT_DIR }} 
