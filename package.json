@@ -4,7 +4,9 @@
   "scripts": {
     "dev": "mastra dev",
     "client": "tsx index.ts",
-    "start": "npm run dev"
+    "start": "npm run dev",
+    "lint": "biome check --write --unsafe",
+    "format": "biome format --write"
   },
   "dependencies": {
     "@mastra/client-js": "latest",
