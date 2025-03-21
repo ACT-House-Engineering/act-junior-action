@@ -9,5 +9,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.5.2"
+  "packageManager": "pnpm@10.5.2",
+  "dependencies": {
+    "@mastra/core": "^0.6.3",
+    "tsx": "^4.19.3"
+  }
 }
