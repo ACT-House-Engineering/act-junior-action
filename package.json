@@ -2,15 +2,18 @@
   "name": "act-junior-action",
   "type": "module",
   "scripts": {
-    "init": "mastra init",
-    "dev": "mastra dev --dir src",
+    "dev": "mastra dev",
     "client": "tsx index.ts",
     "start": "npm run dev"
   },
   "dependencies": {
     "@mastra/client-js": "latest",
     "@mastra/core": "latest",
-    "mastra": "latest",
-    "tsx": "^4.7.0"
+    "execa": "^9.5.2",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "typescript": "^5.0.0"
   }
 }
