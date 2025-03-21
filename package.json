@@ -11,6 +11,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.5.2",
   "dependencies": {
+    "@ai-sdk/openai": "^1.2.7",
     "@mastra/core": "^0.6.3",
     "tsx": "^4.19.3"
   }
