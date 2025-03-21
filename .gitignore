@@ -2,3 +2,4 @@
 .aider.*
 *.temp*
 /node_modules
+/.mastra
