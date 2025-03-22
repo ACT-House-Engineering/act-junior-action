@@ -13,6 +13,7 @@
         "@ai-sdk/anthropic": "^1.2.0",
         "@mastra/client-js": "latest",
         "@mastra/core": "latest",
+        "dotenv": "^16.4.7",
         "execa": "^9.5.2",
         "mastra": "^0.4.2",
         "zod": "^3.22.0"
