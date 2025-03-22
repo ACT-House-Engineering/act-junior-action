@@ -21,6 +21,7 @@
         "@mastra/mcp-docs-server": "^0.0.3",
         "@types/node": "^22.13.11",
         "tsx": "^4.7.0",
-        "typescript": "^5.8.2"
+        "typescript": "^5.8.2",
+        "vitest": "^3.0.9"
     }
 }
