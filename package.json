@@ -10,15 +10,16 @@
     },
     "dependencies": {
         "@ai-sdk/anthropic": "^1.2.0",
-        "mastra": "^0.4.2",
         "@mastra/client-js": "latest",
         "@mastra/core": "latest",
         "execa": "^9.5.2",
+        "mastra": "^0.4.2",
         "zod": "^3.22.0"
     },
     "devDependencies": {
-        "@types/node": "^22.13.11",
         "@biomejs/biome": "1.9.4",
+        "@mastra/mcp-docs-server": "^0.0.3",
+        "@types/node": "^22.13.11",
         "tsx": "^4.7.0",
         "typescript": "^5.8.2"
     }
