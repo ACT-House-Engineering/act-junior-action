@@ -1,5 +1,20 @@
-*.env
+# Build/Distribution files
+dist
+output.txt
+.mastra
+
+# Dependencies
+node_modules
+
+# Environment files
+.env
+.env.development
+
+# Database files
+*.db
+
+# Aider
 .aider.*
-*.temp*
-/node_modules
-/.mastra
+
+# Other
+/.temp
