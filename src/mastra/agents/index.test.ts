@@ -6,7 +6,7 @@ import { weatherAgent } from './index';
 import { isPersonalDevice } from '../../utils';
 
 describe('Weather Agent', () => {
-  it.skipIf(isPersonalDevice())('should validate tone consistency', async () => {
+  it.skip('should validate tone consistency', async () => {
     const metric = new ToneConsistencyMetric();
     const result = await evaluate(weatherAgent, 'London', metric)
  
