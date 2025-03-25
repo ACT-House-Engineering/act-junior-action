@@ -1,5 +1,7 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { directorySummaryTool } from './repomix';
+
 
 interface GeocodingResponse {
   results: {
@@ -99,4 +101,8 @@ function getWeatherCondition(code: number): string {
     99: 'Thunderstorm with heavy hail',
   };
   return conditions[code] || 'Unknown';
+}
+
+export {
+  directorySummaryTool,
 }
