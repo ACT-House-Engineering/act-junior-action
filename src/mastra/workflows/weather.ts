@@ -96,7 +96,7 @@ const fetchWeather = new Step({
             minTemp: data.daily.temperature_2m_min[index],
             precipitationChance:
                 data.daily.precipitation_probability_mean[index],
-            condition: getWeatherCondition(data.daily.weathercode[index]!),
+            condition: getWeatherCondition(data.daily.weathercode[index] || 0),
             location: name,
         }));
 
