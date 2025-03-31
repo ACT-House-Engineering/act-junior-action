@@ -95,10 +95,22 @@ runs:
           ISSUE_TITLE=$(jq -r .issue.title "$EVENT_PATH")
           ISSUE_BODY=$(jq -r .issue.body "$EVENT_PATH")
           
+          # Check if the exact trigger keyword is mentioned
+          if ! [[ "$ISSUE_BODY" =~ [[:space:]]${TRIGGER_KEYWORD}[[:space:]] || "$ISSUE_BODY" =~ ^${TRIGGER_KEYWORD}[[:space:]] || "$ISSUE_BODY" =~ [[:space:]]${TRIGGER_KEYWORD}$ ]]; then
+            echo "Trigger keyword '${TRIGGER_KEYWORD}' not found, skipping"
+            exit 0
+          fi
+          
         elif [[ "$EVENT_NAME" == "pull_request" ]]; then
           ISSUE_NUMBER=$(jq -r .pull_request.number "$EVENT_PATH")
           ISSUE_TITLE=$(jq -r .pull_request.title "$EVENT_PATH")
           ISSUE_BODY=$(jq -r .pull_request.body "$EVENT_PATH")
+          
+          # Check if the exact trigger keyword is mentioned
+          if ! [[ "$ISSUE_BODY" =~ [[:space:]]${TRIGGER_KEYWORD}[[:space:]] || "$ISSUE_BODY" =~ ^${TRIGGER_KEYWORD}[[:space:]] || "$ISSUE_BODY" =~ [[:space:]]${TRIGGER_KEYWORD}$ ]]; then
+            echo "Trigger keyword '${TRIGGER_KEYWORD}' not found, skipping"
+            exit 0
+          fi
           
         elif [[ "$EVENT_NAME" == "issue_comment" || "$EVENT_NAME" == "pull_request_review_comment" ]]; then
           # For comments, we need to check if they're on an issue or PR
@@ -106,10 +118,22 @@ runs:
             ISSUE_NUMBER=$(jq -r .issue.number "$EVENT_PATH")
             ISSUE_TITLE=$(jq -r .issue.title "$EVENT_PATH")
             ISSUE_BODY=$(jq -r .comment.body "$EVENT_PATH")
+            
+            # Check if the exact trigger keyword is mentioned
+            if ! [[ "$ISSUE_BODY" =~ [[:space:]]${TRIGGER_KEYWORD}[[:space:]] || "$ISSUE_BODY" =~ ^${TRIGGER_KEYWORD}[[:space:]] || "$ISSUE_BODY" =~ [[:space:]]${TRIGGER_KEYWORD}$ ]]; then
+              echo "Trigger keyword '${TRIGGER_KEYWORD}' not found, skipping"
+              exit 0
+            fi
           else
             ISSUE_NUMBER=$(jq -r .pull_request.number "$EVENT_PATH")
             ISSUE_TITLE=$(jq -r .pull_request.title "$EVENT_PATH")
             ISSUE_BODY=$(jq -r .comment.body "$EVENT_PATH")
+            
+            # Check if the exact trigger keyword is mentioned
+            if ! [[ "$ISSUE_BODY" =~ [[:space:]]${TRIGGER_KEYWORD}[[:space:]] || "$ISSUE_BODY" =~ ^${TRIGGER_KEYWORD}[[:space:]] || "$ISSUE_BODY" =~ [[:space:]]${TRIGGER_KEYWORD}$ ]]; then
+              echo "Trigger keyword '${TRIGGER_KEYWORD}' not found, skipping"
+              exit 0
+            fi
           fi
         fi
         
