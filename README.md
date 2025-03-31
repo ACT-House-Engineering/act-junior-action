@@ -6,7 +6,7 @@ ACT Junior is a GitHub Action that uses AI to automatically handle issues and pu
 
 ## Features
 
-- Automatically responds to issues and pull requests when mentioned with `@act-junior`
+- Automatically responds to issues and pull requests when mentioned with `@act-junior` or `@act-junior-claude`
 - Creates AI-generated poems and content
 - Self-updates and maintains its own workflow
 - Creates pull requests with solutions
@@ -42,8 +42,17 @@ ACT Junior is a GitHub Action that uses AI to automatically handle issues and pu
 ## Usage
 
 1. Create an issue or pull request
-2. Mention `@act-junior` in your issue/PR
+2. Mention `@act-junior` or `@act-junior-claude` in your issue/PR
 3. The action will analyze your request and respond accordingly
+
+### @act-junior vs @act-junior-claude
+
+- **@act-junior**: Triggers the standard workflow with default Claude model.
+- **@act-junior-claude**: Triggers an enhanced workflow that uses Claude 3.5 Sonnet with more context and capabilities. Use this when you need:
+  - Complex code analysis and solutions
+  - More detailed responses
+  - Advanced reasoning for challenging tasks
+  - Higher context window capacity
 
 ## Workflow Events
 
