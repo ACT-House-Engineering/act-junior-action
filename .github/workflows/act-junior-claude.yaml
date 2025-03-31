@@ -12,7 +12,7 @@ on:
     types: [created]
   push:
     paths:
-      - '.github/workflows/act-junior-claude-workflow.yml'
+      - '.github/workflows/act-junior-claude.yaml'
 
 # Required permissions for creating PRs from workflows
 permissions:
@@ -35,7 +35,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  solve-issue:
+  solve-issue-w-claude:
     # Run this job when:
     # - @act-junior-claude appears in issue/PR title, OR
     # - @act-junior-claude appears in issue/PR body, OR
