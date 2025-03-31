@@ -1,5 +1,5 @@
 name: 🧠 ACT Junior / Claude
-description: "Uses Claude Code to solve issues and create PRs"
+# Workflow that uses Claude Code to solve issues and create PRs
 
 on:
   issues:
