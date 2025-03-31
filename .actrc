@@ -4,4 +4,4 @@
 # --platform 
 --container-architecture linux/amd64
 # https://github.com/nektos/act/issues/2239#issuecomment-1979819940
-# --container-daemon-socket -
+--container-daemon-socket -
