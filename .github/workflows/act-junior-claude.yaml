@@ -75,7 +75,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_GITHUB }}
           
       - name: Install required utilities
         run: |
@@ -96,7 +96,7 @@ jobs:
       - name: Ensure required labels exist
         uses: ./.github/actions/ensure-labels
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.PAT_GITHUB }}
           labels: |
             [
               {"name": "@act-junior-claude", "color": "5319E7", "description": "Issue to be solved by Claude Code"},
@@ -106,7 +106,7 @@ jobs:
       - name: Extract issue details
         id: issue_info
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_GITHUB }}
           TRIGGER_KEYWORD: ${{ env.ACT_TRIGGER_KEYWORD }}
           EVENT_NAME: ${{ github.event_name }}
           EVENT_PATH: ${{ github.event_path }}
@@ -148,7 +148,7 @@ jobs:
 
       - name: Reply to issue/comment
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_GITHUB }}
           ISSUE_NUMBER: ${{ steps.issue_info.outputs.issue-number }}
           BOT_USERNAME: ${{ env.BOT_USERNAME }}
         run: |
@@ -244,7 +244,7 @@ jobs:
       - name: Check if Claude Code made changes
         if: steps.run_claude.outputs.success == 'false'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_GITHUB }}
           ISSUE_NUMBER: ${{ steps.issue_info.outputs.issue-number }}
         run: |
           echo "No changes were made by Claude Code, creating a comment on the issue"
@@ -276,7 +276,7 @@ jobs:
         if: steps.run_claude.outputs.success == 'true'
         id: create_pr
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_GITHUB }}
           ISSUE_NUMBER: ${{ steps.issue_info.outputs.issue-number }}
           ISSUE_TITLE: ${{ steps.issue_info.outputs.issue-title }}
           BRANCH_NAME: ${{ steps.solution.outputs.branch }}
