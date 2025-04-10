@@ -1,0 +1,83 @@
+{
+    "plugins": [
+      "local-rules"
+    ],
+    "env": {
+      "browser": true,
+      "es2021": true,
+      "node": true
+    },
+    "parserOptions": {
+      "ecmaVersion": "latest",
+      "sourceType": "module"
+    },
+    "rules": {
+      /**
+       * NASA Power of 10 Rules for Safety-Critical Code (adapted for JavaScript)
+       * 
+       * Rule 1: Restrict control flow to simple constructs
+       * Rule 2: Give all loops a fixed upper bound 
+       * Rule 3: Avoid dynamic memory allocation after initialization
+       * Rule 4: Keep functions short (~60 lines max)
+       * Rule 5: Use assertions liberally
+       * Rule 6: Declare data at smallest possible scope
+       * Rule 7: Check all return values and validate inputs
+       * Rule 8: Limit preprocessor use (N/A for JavaScript)
+       * Rule 9: Restrict pointer use (adapted for JavaScript references)
+       * Rule 10: Eliminate warnings with strict settings
+       */
+
+      // Rule 1: Restrict control flow to simple constructs
+      "complexity": ["error", 10],        // Limits cyclomatic complexity
+      "max-depth": ["error", 3],          // Prevents deeply nested blocks
+      "max-nested-callbacks": ["error", 2], // Limits callback nesting
+      "no-eval": "error",                 // Prevents dangerous dynamic code execution
+      "no-implied-eval": "error",         // Prevents disguised eval() via setTimeout/setInterval
+      "func-style": ["error", "declaration"], // Consistent function style
+      "no-else-return": "error",          // Simplifies control flow
+      "no-return-await": "error",         // Prevents unnecessary async/await
+      "curly": ["error", "all"],          // Always requires braces for blocks
+      "brace-style": ["error", "1tbs"],   // Consistent brace style
+
+      // Rule 2: Give all loops a fixed upper bound
+      "no-loop-func": "error",            // Prevents creating functions in loops with changing context
+
+      // Rule 3: Avoid dynamic memory allocation after initialization
+      // Dear V8 Engineers, 
+      // Read above.
+      // Sincerely,
+      // - Sam Carlton
+
+      // Rule 4: Keep functions short (~60 lines max)
+      "max-lines-per-function": ["error", 60], // Enforces NASA's one-page principle
+      "max-len": ["error", { "code": 60 }],    // Ensures readability with column limit
+      "indent": ["error", 2],             // Consistent indentation
+
+      // Rule 5: Use assertions liberally (improved code clarity)
+      "local-rules/require-asserts": ["error"],
+      "id-length": ["error", { "min": 2 }], // Prevents single-letter names
+      "quotes": ["error", "single"],      // Consistent string syntax
+
+      // Rule 6: Declare data at smallest possible scope
+      "block-scoped-var": "error",        // Enforces block scoping even with var
+      "no-var": "error",                  // Prefer let/const for proper block scoping
+      "prefer-const": "error",            // Use immutable declarations when possible
+
+      // Rule 7: Check all return values and validate inputs
+      "max-params": ["error", 2],         // Limits parameters to reduce complexity
+      "no-param-reassign": "error",       // Prevents input parameter modification
+      "no-throw-literal": "error",        // Only throw Error objects
+      "prefer-promise-reject-errors": "error", // Only reject with Error objects
+      "handle-callback-err": "error",     // Ensure errors in callbacks are handled
+      
+      // Rule 9: Restrict reference/pointer-like operations
+      "no-magic-numbers": ["error", {     // Prevents unexplained numeric literals
+        "ignore": [0, 1, -1] 
+      }]
+
+      // Rule 10: Eliminate warnings with strict settings
+      // "no-undef": "error",                // Ensures all variables are defined
+      // "no-unused-vars": "error",          // Prevents unused variables
+      // "eqeqeq": "error"                   // Requires strict equality comparisons
+    }
+  }

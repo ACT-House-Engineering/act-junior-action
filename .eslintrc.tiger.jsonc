@@ -1,0 +1,223 @@
+/**
+ * 🐅 TIGER STYLE ESLINT RULES
+ * 
+ * A strict set of ESLint rules enforcing TigerBeetle's coding principles:
+ * - Safety first: Enforces defensive programming practices
+ * - Performance: Prevents patterns that could impact performance
+ * - Developer Experience: Maintains consistent, readable code
+ * 
+ * These rules build upon eslint:recommended as a foundation
+ * and assume it is already extended.
+ * 
+ * @see /docs/tiger-style.md for detailed style guide
+ * 
+ * @example Command
+ * $ pnpm lint --config ./.eslintrc.tiger.jsonc
+ * $ pnpm lint --config ./.eslintrc.tiger.jsonc --file ./features/classic-assessment/utils/parse-qualtrics.ts
+ */
+ {  
+    // ------------------------------------------------------------
+    // We are NOT extending any recommended configs here
+    // (eslint:recommended, plugin:@typescript-eslint/recommended, etc.)
+    // nor plugin:sonarjs/recommended or plugin:prettier/recommended.
+    // ------------------------------------------------------------
+    "extends": [],
+  
+    // ------------------------------------------------------------
+    // Plugins
+    // ------------------------------------------------------------
+    "plugins": [
+      // "functional",
+      "local-rules",
+  
+      // From the earlier Tiger Style rules:
+      "@typescript-eslint",
+      "promise",
+      // "unicorn",
+      "security",
+      "jsdoc"
+    ],
+  
+    // ------------------------------------------------------------
+    // Overrides (Test-specific, etc.)
+    // ------------------------------------------------------------
+    "overrides": [
+      {
+        "files": ["**/__tests__/**"],
+        "rules": {
+          // Disabling or adjusting some rules in test files
+          "max-nested-callbacks": "off",
+          "no-unused-expressions": "off",
+          "prefer-arrow-callback": "off",
+          "func-names": "off",
+          // Allow slightly longer lines in test files
+          "max-len": ["warn", { "code": 150 }]
+        }
+      }
+    ],
+  
+    // ------------------------------------------------------------
+    // Plugin Settings (functional, etc.)
+    // ------------------------------------------------------------
+    "settings": {
+      "functional": {
+        // Allow mutation in test files if desired
+        "ignorePattern": ["**/test/**", "**/__tests__/**"]
+      }
+    },
+  
+    // ------------------------------------------------------------
+    // Rules
+    // ------------------------------------------------------------
+    "rules": {
+      // ===========================================================
+      // TIGER STYLE RULES (SAFETY, PERFORMANCE, DX)
+      // ===========================================================
+  
+      // 1. "See the whole picture" rules (from your added config)
+      "no-duplicate-case": "error",
+      "no-duplicate-imports": "error",
+      // Handled by typescript compiler
+      // "no-duplicate-class-members": "error",
+      "no-fallthrough": "error", // also from previous config
+  
+      // 2. "Check yourself" defensive rules
+      "no-const-assign": "error",
+      "no-class-assign": "error",
+      "no-unsafe-negation": "error",
+      "no-invalid-regexp": "error",
+      "no-constant-condition": ["error", { "checkLoops": false }],
+      "no-loss-of-precision": "error",
+      // Merge with older config’s 'prefer-const' but keep new one’s extra option
+      "prefer-const": ["error", { "ignoreReadBeforeAssign": true }],
+      "local-rules/require-asserts": "error",
+  
+      // 3. Functional programming rules
+      // Not working yet
+      // "functional/no-let": "error",
+      // "functional/no-mutation": ["error", { "exceptions": ["objectProperties"] }],
+      // "functional/prefer-readonly-type": "warn",
+  
+      // 4. Keep functions small (Tiger Style: ~70 lines max)
+      "max-lines-per-function": [
+        "warn",
+        {
+          "max": 70,
+          "skipBlankLines": true,
+          "skipComments": true,
+          "IIFEs": true
+        }
+      ],
+  
+      // 5. Limit cyclomatic complexity (keep control flow simple)
+      "complexity": ["warn", { "max": 10 }],
+  
+      // 6. Limit function parameters
+      "max-params": ["warn", 3],
+  
+      // 7. Always use braces for blocks
+      "curly": ["error", "all"],
+  
+      // 8. Strict equality & no implicit coercion
+      "eqeqeq": ["error", "always"],
+      "no-implicit-coercion": "warn",
+  
+      // 9. Disallow var; keep no-var from the older config
+      "no-var": "error",
+  
+      // 10. No shadowing / no redeclaration
+      "no-shadow": "warn",
+      "no-redeclare": "error",
+  
+      // 11. Enforce minimal identifier length (avoid abbreviations)
+      "id-length": [
+        "warn",
+        {
+          "min": 3,
+          "exceptions": ["i", "j", "k", "x", "y", "is"]
+        }
+      ],
+  
+      // 12. Comments as sentences (Tiger Style: say 'why')
+      "spaced-comment": ["warn", "always", { "exceptions": ["-", "+"] }],
+      "capitalized-comments": [
+        "warn",
+        "always",
+        {
+          "ignoreConsecutiveComments": true,
+          "ignoreInlineComments": true,
+          "ignorePattern": "pragma|ignored"
+        }
+      ],
+  
+      // 13. No empty blocks or silent catches
+      "no-empty": ["error", { "allowEmptyCatch": false }],
+      "no-empty-function": "warn",
+  
+      // 14. Promise rules: always handle rejections
+      "promise/catch-or-return": "error",
+      "promise/always-return": "error",
+  
+      // 15. TypeScript: no floating promises
+      // Required ts parser
+      // "@typescript-eslint/no-floating-promises": "warn",
+  
+      // 16. Force consistent return style
+      "consistent-return": "warn",
+  
+      // 17. Switch must have default case
+      "default-case": "error",
+  
+      // 18. No magic numbers (Tiger Style: name constants)
+      "no-magic-numbers": [
+        "warn",
+        {
+          "ignore": [0, 1, -1],
+          "ignoreArrayIndexes": true,
+          "enforceConst": true,
+          "detectObjects": false
+        }
+      ],
+  
+      // 19. Extra blank lines to group logic (readability)
+      "padding-line-between-statements": [
+        "warn",
+        { "blankLine": "always", "prev": "*", "next": "return" },
+        { "blankLine": "always", "prev": ["const", "let", "var"], "next": "*" },
+        {
+          "blankLine": "any",
+          "prev": ["const", "let", "var"],
+          "next": ["const", "let", "var"]
+        }
+      ],
+      
+      // Not working yet
+      // 20. Unicorn plugin: only the mentioned "prevent-abbreviations"
+      // (Tiger Style: prefer descriptive naming, e.g., 'request' not 'req')
+      // "unicorn/prevent-abbreviations": [
+      //   "warn",
+      //   {
+      //     "replacements": {
+      //       "req": false,
+      //       "err": false
+      //     }
+      //   }
+      // ],
+  
+      // 21. JSDoc: require short descriptions for parameters/returns
+      "jsdoc/require-description": "warn",
+      "jsdoc/require-param-description": "warn",
+      "jsdoc/require-returns-description": "warn",
+  
+      // 22. TypeScript: explicit return types & no 'any'
+      "@typescript-eslint/explicit-function-return-type": [
+        "warn",
+        {
+          "allowExpressions": true,
+          "allowConciseArrowFunctionExpressionsStartingWithVoid": true
+        }
+      ],
+      "@typescript-eslint/no-explicit-any": "warn"
+    }
+  }
+  
