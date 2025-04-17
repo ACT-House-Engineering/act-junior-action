@@ -1,0 +1,2 @@
+- Always write code in Tiger Style from ./docs/tiger-style.md
+- Always use at least 1 assert per function to verify runtime state

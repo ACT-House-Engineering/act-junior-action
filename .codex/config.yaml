@@ -1,0 +1,2 @@
+model: o4-mini # Default model
+fullAutoErrorMode: ignore-and-continue
