@@ -1,0 +1,58 @@
+name: 🌼 ACT Junior Codex (WIP)
+
+# Add permissions here for the whole workflow
+permissions:
+  contents: write # Needed to commit changes
+  pull-requests: write # Needed to create the PR
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main # Example: Only run on pushes to main
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛒 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Install Correct Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+
+      - name: 📦 Setup PNPM and Install dependencies
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: true
+          version: latest
+
+      - name: 🌼 Update changelog via Codex
+        run: |
+          export OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
+          pnpm codex -a auto-edit --quiet "Update the README.md file with the latest changes"
+
+      # Add this step to create the PR
+      - name: ✨ Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          # Use a PAT if you need the PR to trigger
+          # other workflows.
+          token: ${{ secrets.PAT_GITHUB }}
+          # token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update CHANGELOG.md"
+          committer: GitHub <noreply@github.com>
+          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+          signoff: false
+          branch: chore/update-changelog # Branch name
+          delete-branch: true # Delete branch after PR merge
+          title: 'chore: Update CHANGELOG.md'
+          body: |
+            Automated update of CHANGELOG.md based on recent changes.
+            Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          labels: automated pr, changelog
+          assignees: ${{ github.actor }}
+          reviewers: ${{ github.actor }}
+          draft: false
