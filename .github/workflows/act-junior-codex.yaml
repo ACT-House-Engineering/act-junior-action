@@ -6,6 +6,17 @@ permissions:
   pull-requests: write # Needed to create the PR
   issues: read # Needed for issue_comment trigger context
 
+# Centralized configuration
+env:
+  TRIGGER_PHRASE: act-junior-codex
+  BRANCH_NAME: ai/act-junior-codex
+  COMMIT_MESSAGE: "chore: update CHANGELOG.md"
+  PR_TITLE: "chore: Update CHANGELOG.md"
+  PR_LABELS: "automated pr, changelog"
+  # TODO: Make this prompt dynamic based on issue?
+  CODEX_PROMPT_CI: "Update the README.md file with the latest changes"
+  CODEX_PROMPT_TEST: "Explain the purpose of a CHANGELOG.md file"
+
 on:
   workflow_dispatch:
   issue_comment:
@@ -16,13 +27,22 @@ on:
 
 jobs:
   ci:
-    # Condition to run only on issue comments (not PRs)
-    # containing the trigger phrase
-    if: >
-      github.event.issue.pull_request == null &&
-      contains(github.event.comment.body, '/update-changelog')
+    # Condition moved to the first step below
+    # if: >
+    #   github.event.issue.pull_request == null &&
+    #   contains(github.event.comment.body, env.TRIGGER_PHRASE)
     runs-on: ubuntu-latest
     steps:
+      # Check condition as the first step
+      - name: Check trigger phrase in comment
+        if: >
+          github.event_name == 'issue_comment' &&
+          (github.event.issue.pull_request != null ||
+           !contains(github.event.comment.body, env.TRIGGER_PHRASE))
+        run: |
+          echo "Comment does not contain trigger phrase or is on a PR. Skipping."
+          exit 78 # Use exit code 78 for neutral exit
+
       - name: 🛒 Checkout code
         uses: actions/checkout@v4
         with:
@@ -40,11 +60,10 @@ jobs:
           run_install: true
           version: latest
 
-      - name: 🌼 Update changelog via Codex
+      - name: 🌼 Update file via Codex
         run: |
           export OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
-          # TODO: Update prompt based on issue context?
-          pnpm codex -a auto-edit --quiet "Update the README.md file with the latest changes"
+          pnpm codex -a auto-edit --quiet "${{ env.CODEX_PROMPT_CI }}"
 
       # Add this step to check git status
       - name: 🔍 Check for changes
@@ -58,19 +77,19 @@ jobs:
           # other workflows.
           token: ${{ secrets.PAT_GITHUB }}
           # token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: update CHANGELOG.md"
+          commit-message: ${{ env.COMMIT_MESSAGE }}
           committer: GitHub <noreply@github.com>
           author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
           signoff: false
-          branch: chore/update-changelog # Branch name
+          branch: ${{ env.BRANCH_NAME }}
           delete-branch: true # Delete branch after PR merge
-          title: 'chore: Update CHANGELOG.md'
+          title: ${{ env.PR_TITLE }}
           body: |
-            Automated update of CHANGELOG.md requested in #${{ github.event.issue.number }}.
+            Automated update requested in #${{ github.event.issue.number }}.
 
             Triggered by @${{ github.actor }} in comment: ${{ github.event.comment.html_url }}
             Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          labels: automated pr, changelog
+          labels: ${{ env.PR_LABELS }}
           assignees: ${{ github.actor }}
           reviewers: ${{ github.actor }}
           draft: false
@@ -99,4 +118,4 @@ jobs:
         run: |
           export OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
           # Use a simple, non-editing command
-          pnpm codex --quiet "Explain the purpose of a CHANGELOG.md file"
+          pnpm codex --quiet "${{ env.CODEX_PROMPT_TEST }}"
