@@ -4,19 +4,30 @@ name: 🌼 ACT Junior Codex (WIP)
 permissions:
   contents: write # Needed to commit changes
   pull-requests: write # Needed to create the PR
+  issues: read # Needed for issue_comment trigger context
 
 on:
   workflow_dispatch:
+  issue_comment:
+    types: [created]
   push:
     branches:
-      - main # Example: Only run on pushes to main
+      - main
 
 jobs:
   ci:
+    # Condition to run only on issue comments (not PRs)
+    # containing the trigger phrase
+    if: >
+      github.event.issue.pull_request == null &&
+      contains(github.event.comment.body, '/update-changelog')
     runs-on: ubuntu-latest
     steps:
       - name: 🛒 Checkout code
         uses: actions/checkout@v4
+        with:
+          # Checkout main branch explicitly
+          ref: main
 
       - name: 📦 Install Correct Node Version
         uses: actions/setup-node@v4
@@ -32,7 +43,12 @@ jobs:
       - name: 🌼 Update changelog via Codex
         run: |
           export OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
+          # TODO: Update prompt based on issue context?
           pnpm codex -a auto-edit --quiet "Update the README.md file with the latest changes"
+
+      # Add this step to check git status
+      - name: 🔍 Check for changes
+        run: git status
 
       # Add this step to create the PR
       - name: ✨ Create Pull Request
@@ -50,9 +66,37 @@ jobs:
           delete-branch: true # Delete branch after PR merge
           title: 'chore: Update CHANGELOG.md'
           body: |
-            Automated update of CHANGELOG.md based on recent changes.
+            Automated update of CHANGELOG.md requested in #${{ github.event.issue.number }}.
+
+            Triggered by @${{ github.actor }} in comment: ${{ github.event.comment.html_url }}
             Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           labels: automated pr, changelog
           assignees: ${{ github.actor }}
           reviewers: ${{ github.actor }}
           draft: false
+
+  # New job to test codex cli on main push
+  test-codex:
+    # Run only on push to main branch
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛒 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Install Correct Node Version
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+
+      - name: 📦 Setup PNPM and Install dependencies
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: true
+          version: latest
+
+      - name: 🧪 Verify Codex CLI execution
+        run: |
+          export OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
+          # Use a simple, non-editing command
+          pnpm codex --quiet "Explain the purpose of a CHANGELOG.md file"
