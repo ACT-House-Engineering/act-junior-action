@@ -1,2 +1,2 @@
-model: o4-mini # Default model
+model: codex-mini-latest
 fullAutoErrorMode: ignore-and-continue
