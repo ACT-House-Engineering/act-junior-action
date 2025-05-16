@@ -70,7 +70,7 @@ jobs:
       - name: Run Codex in non-interactive CI mode
         run: |
           PROMPT="${ISSUE_TITLE}\n\n${ISSUE_BODY}"
-          codex -a auto-edit -m codex-mini-latest --w docs/ --quiet --flex-mode "$PROMPT"
+          codex -a auto-edit -m codex-mini-latest --w docs/ --quiet "$PROMPT"
       # after your "Run Codex…" step, before create‑pull‑request
       - name: Force origin to HTTPS with token
         run: |
